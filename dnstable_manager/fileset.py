@@ -10,6 +10,7 @@ import sys
 import tempfile
 import time
 import unittest
+import urllib
 import urllib2
 
 def parse_datetime(s):
@@ -73,6 +74,31 @@ class TestParseDatetime(unittest.TestCase):
         self.assertRaises(ValueError, parse_datetime, '20060102.0060')
         self.assertRaises(ValueError, parse_datetime, '20060102.1500.')
 
+def relative_uri(uri, fn):
+    path,query = urllib.splitquery(uri)
+    path,attrs = urllib.splitattr(path)
+    if fn.startswith('/'):
+        scheme,_,path = path.partition(':')
+        host,path = urllib.splithost(path)
+        new_uri = '{}://{}/{}'.format(scheme, host, fn[1:])
+    else:
+        parent = path.rpartition('/')[0]
+        new_uri = '{}/{}'.format(parent, fn)
+    if attrs:
+        new_uri = '{};{}'.format(new_uri, ';'.join(attrs))
+    return new_uri
+
+class TestRelativeUri(unittest.TestCase):
+    def test_relative_uri(self):
+        self.assertEquals(relative_uri('http://foo/bar', 'baz'), 'http://foo/baz')
+        self.assertEquals(relative_uri('http://foo/bar/baz', 'abc'), 'http://foo/bar/abc')
+        self.assertEquals(relative_uri('http://foo/bar/baz', '/abc'), 'http://foo/abc')
+
+    def test_relative_uri_attrs(self):
+        self.assertEquals(relative_uri('http://foo/bar;a=b', 'baz'), 'http://foo/baz;a=b')
+        self.assertEquals(relative_uri('http://foo/bar;a=b;c=d', 'baz'), 'http://foo/baz;a=b;c=d')
+        self.assertEquals(relative_uri('http://foo/bar/baz;a=b;c=d', '/abc'), 'http://foo/abc;a=b;c=d')
+
 def compute_overlap(files):
     years = set()
     quarters = set()
@@ -96,7 +122,7 @@ def compute_overlap(files):
             return True
         dt_q = int((dt.month-1) / 3) * 3 + 1
         for q in quarters:
-            if dt.year == m.year and dt_q == q.month:
+            if dt.year == q.year and dt_q == q.month:
                 return True
         return False
 
@@ -219,13 +245,15 @@ class File(object):
 
     _valid_tl = ('Y', 'Q', 'M', 'W', 'D', 'H', 'X', 'm')
 
-    def __init__(self, name):
+    def __init__(self, name, dname=None, uri=None):
         self.name = name
+        self.dname = dname
+        self.uri = uri
         self._init_tl()
         self._init_datetime()
 
     def __repr__(self):
-        return '<File %r, tl %r, %r>' % (self.name, self.tl, self.datetime)
+        return '<File %r, tl %r, %r, dir %r, uri %r>' % (self.name, self.tl, self.datetime, self.dname, self.uri)
 
     def _init_tl(self):
         try:
@@ -234,7 +262,7 @@ class File(object):
             raise ValueError('Unable to parse time letter from file name {}'.format(self.name))
 
         if not tl in File._valid_tl:
-            raise ValueError('Time letter {} not in valid set {}'.format(tl, File.valid_tl))
+            raise ValueError('Time letter {} not in valid set {}'.format(tl, File._valid_tl))
         self.tl = tl
 
     def _init_datetime(self):
@@ -375,7 +403,7 @@ class Fileset(object):
             if not fname.endswith('.{}'.format(self.extension)):
                 continue
 
-            self.remote_files.add(File(fname))
+            self.remote_files.add(File(fname, dname=self.dname, uri=relative_uri(self.uri, fname)))
 
     def missing_files(self):
         return self.remote_files.difference(self.local_files)

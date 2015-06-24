@@ -2,12 +2,10 @@ from __future__ import print_function
 
 from cStringIO import StringIO
 import email.utils
-import mimetools
 import mimetypes
 import os
 import subprocess
 import tempfile
-import time
 import urllib
 import urllib2
 import unittest
@@ -56,7 +54,7 @@ class RsyncHandler(urllib2.BaseHandler):
         stderr = tempfile.TemporaryFile()
         try:
             subprocess.check_call(cmd_args, stderr=stderr)
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             stderr.seek(0)
             raise urllib2.URLError('rsync error: {}'.format(stderr.read()))
 
