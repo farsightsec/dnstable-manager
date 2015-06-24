@@ -368,7 +368,7 @@ class Fileset(object):
                 raise
 
         if old_fileset.symmetric_difference(f.name for f in self.local_files) or not os.path.exists(fileset_fname):
-            with tempfile.NamedTemporaryFile(delete=True) as out:
+            with tempfile.NamedTemporaryFile(prefix='.{}.'.format(os.path.basename(fileset_fname)), dir=os.path.dirname(fileset_fname), delete=True) as out:
                 for f in sorted(self.local_files):
                     print (f.name, file=out)
                 out.file.close()
