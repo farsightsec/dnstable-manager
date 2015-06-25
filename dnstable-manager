@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import argparse
+import logging
 import os
 
 from dnstable_manager import DNSTableManager
@@ -19,6 +20,10 @@ def main():
         parser.error('Not a directory: {}'.format(args.destination))
 
     dnstable_manager.rsync.install(rsync_rsh=args.rsync_rsh)
+
+    logger = logging.getLogger()
+    logger.addHandler(logging.StreamHandler())
+    logger.setLevel(logging.INFO)
 
     manager = DNSTableManager(args.fileset_uri, args.destination, base=args.base, frequency=args.frequency)
     manager.run()
