@@ -57,7 +57,6 @@ class DNSTableManager:
 
             for f in sorted(self.fileset.missing_files()):
                 if f not in self.download_manager:
-                    self.log('Enqueuing {}'.format(f.name))
                     self.download_manager.enqueue(f)
 
             self.fileset.prune_obsolete_files()
