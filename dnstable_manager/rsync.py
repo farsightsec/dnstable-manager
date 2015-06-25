@@ -46,7 +46,8 @@ class RsyncHandler(urllib2.BaseHandler):
         if options['rsync_rsh']:
             cmd_args.extend(('-e', options['rsync_rsh']))
 
-        tf = tempfile.mktemp(prefix='rsync')
+        fn = source.rpartition('/')[2]
+        tf = tempfile.mktemp(prefix='rsync--{}.'.format(fn))
 
         cmd_args.extend((source, tf))
 
