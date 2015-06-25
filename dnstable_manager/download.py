@@ -6,6 +6,7 @@ import os
 import shutil
 import sys
 import tempfile
+import time
 import threading
 import unittest
 import urllib2
@@ -14,10 +15,14 @@ from dnstable_manager.fileset import File
 import terminable_thread
 
 class DownloadManager:
-    def __init__(self, max_downloads=4, print_lock=None, sleep_time=1):
+    def __init__(self, max_downloads=4, retry_timeout=60, print_lock=None, sleep_time=1):
         self._pending_downloads = set()
         self._active_downloads = dict()
+
+        self._failed_downloads = dict()
+
         self._max_downloads = max_downloads
+        self._retry_timeout = retry_timeout
         self._sleep_time = sleep_time
         self._lock = threading.RLock()
         
@@ -57,11 +62,14 @@ class DownloadManager:
                     if not thread.isAlive():
                         del self._active_downloads[f]
                         thread.join()
+                for f,thread in self._failed_downloads.items():
+                    if not thread.isAlive():
+                        del self._failed_downloads[f]
+                        thread.join()
 
             with self._lock:
                 for f in heapq.nlargest(self._max_downloads - len(self._active_downloads), self._pending_downloads):
-                    with self._lock:
-                        self._pending_downloads.remove(f)
+                    self._pending_downloads.remove(f)
 
                     thread = terminable_thread.Thread(target=self._download, args=(f,))
                     thread.setDaemon(False)
@@ -77,6 +85,10 @@ class DownloadManager:
                 thread.terminate()
                 thread.join()
                 del self._active_downloads[f]
+            for f,thread in self._failed_downloads.items():
+                thread.terminate()
+                thread.join()
+                del self._failed_downloads[f]
         
     def _download(self, f):
         try:
@@ -101,11 +113,22 @@ class DownloadManager:
             with self._action_required:
                 self._action_required.notify()
         except:
-            raise
+            expire_thread = terminable_thread.Thread(target=self._expire_failed_download, args=(f,))
+            expire_thread.setDaemon(False)
+            expire_thread.start()
+            with self._lock:
+                self._failed_downloads[f] = expire_thread
+
+    def _expire_failed_download(self, f, timeout=None):
+        if timeout is None:
+            timeout = self._retry_timeout
+        self.log('Waiting {timeout} to retry {uri}'.format(timeout=timeout, uri=f.uri))
+        time.sleep(timeout)
+        self.log('Failure timeout for {uri} complete'.format(f.uri))
 
     def __contains__(self, filename):
         with self._lock:
-            return filename in self._pending_downloads or filename in self._active_downloads
+            return filename in self._pending_downloads or filename in self._active_downloads or filename in self._failed_downloads
 
     def enqueue(self, f):
         self.log('Enqueuing {}'.format(os.path.basename(f.name)))
