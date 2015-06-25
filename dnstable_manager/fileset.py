@@ -390,6 +390,7 @@ class Fileset(object):
             self.pending_deletions.remove(f)
 
     def load_remote_fileset(self):
+        self.log('Retrieving {}'.format(self.uri))
         fp = urllib2.urlopen(self.uri)
         self.remote_files = set()
         for fname in fp:
