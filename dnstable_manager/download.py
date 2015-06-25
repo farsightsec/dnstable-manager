@@ -128,7 +128,7 @@ class DownloadManager:
             timeout = self._retry_timeout
         self.log('Waiting {timeout} to retry {uri}'.format(timeout=timeout, uri=f.uri))
         time.sleep(timeout)
-        self.log('Failure timeout for {uri} complete'.format(f.uri))
+        self.log('Failure timeout for {uri} complete'.format(uri=f.uri))
 
     def __contains__(self, filename):
         with self._lock:
