@@ -112,6 +112,10 @@ class DownloadManager:
 
             with self._action_required:
                 self._action_required.notify()
+        except KeyboardInterrupt:
+            raise
+        except SystemExit:
+            raise
         except:
             expire_thread = terminable_thread.Thread(target=self._expire_failed_download, args=(f,))
             expire_thread.setDaemon(False)
