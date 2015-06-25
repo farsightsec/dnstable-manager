@@ -4,9 +4,9 @@ from cStringIO import StringIO
 import datetime
 import errno
 import glob
+import logging
 import os
 import shutil
-import sys
 import tempfile
 import time
 import unittest
@@ -379,18 +379,18 @@ class Fileset(object):
     def purge_deleted_files(self):
         for f in sorted(self.pending_deletions):
             fn = os.path.join(self.dname, f.name)
-            self.log('Unlinking {}'.format(fn))
+            logging.info('Unlinking {}'.format(fn))
             try:
                 os.unlink(fn)
             except OSError as e:
                 if e.errno == errno.ENOENT:
-                    self.log('File vanished {}'.format(fn))
+                    logging.error('File vanished {}'.format(fn))
                 else:
                     raise
             self.pending_deletions.remove(f)
 
     def load_remote_fileset(self):
-        self.log('Retrieving {}'.format(self.uri))
+        logging.info('Retrieving {}'.format(self.uri))
         fp = urllib2.urlopen(self.uri)
         self.remote_files = set()
         for fname in fp:
@@ -408,9 +408,6 @@ class Fileset(object):
 
     def missing_files(self):
         return self.remote_files.difference(self.local_files)
-
-    def log(self, msg, stream=sys.stdout):
-        print (msg, file=stream)
 
 class TestFileset(unittest.TestCase):
     @staticmethod
@@ -544,7 +541,6 @@ class TestFileset(unittest.TestCase):
         os.unlink = my_unlink
 
         fs = Fileset(None, self.td)
-        fs.log = TestFileset.noop
         fs.pending_deletions = files
         fs.purge_deleted_files()
 

@@ -2,9 +2,9 @@ from __future__ import print_function
 
 from cStringIO import StringIO
 import heapq
+import logging
 import os
 import shutil
-import sys
 import tempfile
 import time
 import threading
@@ -15,7 +15,7 @@ from dnstable_manager.fileset import File
 import terminable_thread
 
 class DownloadManager:
-    def __init__(self, max_downloads=4, retry_timeout=60, print_lock=None, sleep_time=1):
+    def __init__(self, max_downloads=4, retry_timeout=60, sleep_time=1):
         self._pending_downloads = set()
         self._active_downloads = dict()
 
@@ -26,11 +26,6 @@ class DownloadManager:
         self._sleep_time = sleep_time
         self._lock = threading.RLock()
         
-        if print_lock:
-            self._print_lock = print_lock
-        else:
-            self._print_lock = threading.RLock()
-
         self._main_thread = None
         self._action_required = threading.Condition()
         self._terminate = threading.Event() 
@@ -97,7 +92,7 @@ class DownloadManager:
             else:
                 target = f.name
 
-            self.log('Downloading {}'.format(f.uri))
+            logging.info('Downloading {}'.format(f.uri))
 
             fp = urllib2.urlopen(f.uri)
             out = tempfile.NamedTemporaryFile(prefix='.{}.'.format(f.name), dir=f.dname)
@@ -108,7 +103,7 @@ class DownloadManager:
             os.rename(out.name, target)
             out.delete = False
 
-            self.log('Download of {} complete'.format(f.uri))
+            logging.info('Download of {} complete'.format(f.uri))
 
             with self._action_required:
                 self._action_required.notify()
@@ -126,26 +121,22 @@ class DownloadManager:
     def _expire_failed_download(self, f, timeout=None):
         if timeout is None:
             timeout = self._retry_timeout
-        self.log('Waiting {timeout} to retry {uri}'.format(timeout=timeout, uri=f.uri))
+        logging.info('Waiting {timeout} to retry {uri}'.format(timeout=timeout, uri=f.uri))
         time.sleep(timeout)
-        self.log('Failure timeout for {uri} complete'.format(uri=f.uri))
+        logging.info('Failure timeout for {uri} complete'.format(uri=f.uri))
 
     def __contains__(self, filename):
         with self._lock:
             return filename in self._pending_downloads or filename in self._active_downloads or filename in self._failed_downloads
 
     def enqueue(self, f):
-        self.log('Enqueuing {}'.format(os.path.basename(f.name)))
+        logging.info('Enqueuing {}'.format(os.path.basename(f.name)))
 
         with self._lock:
             self._pending_downloads.add(f)
 
         with self._action_required:
             self._action_required.notify()
-
-    def log(self, msg, stream=sys.stdout):
-        with self._print_lock:
-            print (msg, file=stream)
 
 class TestDownloadManager(unittest.TestCase):
     @staticmethod
@@ -168,6 +159,5 @@ class TestDownloadManager(unittest.TestCase):
         urllib2.urlopen = my_urlopen
 
         m = DownloadManager()
-        m.log = TestDownloadManager.noop
         m._download(f)
         self.assertEquals(open(tf.name).read(), test_data)

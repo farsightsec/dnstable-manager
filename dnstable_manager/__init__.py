@@ -2,7 +2,6 @@ from __future__ import print_function
 from cStringIO import StringIO
 import os
 import shutil
-import sys
 import tempfile
 import threading
 import time
@@ -20,12 +19,7 @@ from dnstable_manager.fileset import Fileset
 # backoff.
 
 class DNSTableManager:
-    def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, print_lock=None, download_manager=None):
-        if print_lock:
-            self.print_lock = print_lock
-        else:
-            self.print_lock = threading.RLock()
-
+    def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, download_manager=None):
         self.fileset_uri = fileset_uri
 
         self.destination = destination
@@ -43,7 +37,7 @@ class DNSTableManager:
         if download_manager:
             self.download_manager = download_manager
         else:
-            self.download_manager = DownloadManager(print_lock=self.print_lock)
+            self.download_manager = DownloadManager()
             self.download_manager.start()
 
     def run(self):
@@ -65,10 +59,6 @@ class DNSTableManager:
             self.fileset.purge_deleted_files()
 
             time.sleep(1)
-
-    def log(self, msg, stream=sys.stdout):
-        with self.print_lock:
-            print (msg, file=stream)
 
 class TestDNSTableManager(unittest.TestCase):
     @staticmethod
@@ -116,9 +106,7 @@ class TestDNSTableManager(unittest.TestCase):
         try:
             d = DownloadManager(sleep_time=0.0001)
             d.start()
-            d.log = TestDNSTableManager.noop
             m = DNSTableManager(fileset_uri, td, download_manager=d)
-            m.log = TestDNSTableManager.noop
             self.assertRaises(Success, m.run)
             self.orig_sleep(0.1)
             for fn in fileset:
