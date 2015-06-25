@@ -46,29 +46,34 @@ class RsyncHandler(urllib2.BaseHandler):
         if options['rsync_rsh']:
             cmd_args.extend(('-e', options['rsync_rsh']))
 
-        destination = tempfile.NamedTemporaryFile(prefix='rsync', delete=True)
-        destination.file.close()
+        tf = tempfile.mktemp(prefix='rsync')
 
-        cmd_args.extend((source, destination.name))
+        cmd_args.extend((source, tf))
 
         stderr = tempfile.TemporaryFile()
         try:
             subprocess.check_call(cmd_args, stderr=stderr)
+
+            tf_stat = os.stat(tf)
+            fp = open(tf)
         except subprocess.CalledProcessError:
             stderr.seek(0)
             raise urllib2.URLError('rsync error: {}'.format(stderr.read()))
-
-        destination.file = open(destination.name)
+        finally:
+            try:
+                os.unlink(tf)
+            except OSError:
+                pass
 
         headers = StringIO()
-        mtype = mimetypes.guess_type(destination.name)[0]
+        mtype = mimetypes.guess_type(source)[0]
         if mtype:
             print ('Content-type: {}'.format(mtype), file=headers)
-        print ('Content-length: {:0d}'.format(os.stat(destination.name).st_size), file=headers)
-        print ('Last-modified: {}'.format(email.utils.formatdate(os.stat(destination.name).st_mtime, usegmt=True)), file=headers)
+        print ('Content-length: {:0d}'.format(tf_stat.st_size), file=headers)
+        print ('Last-modified: {}'.format(email.utils.formatdate(tf_stat.st_mtime, usegmt=True)), file=headers)
         headers.seek(0)
 
-        return urllib.addinfourl(destination, headers, source)
+        return urllib.addinfourl(fp, headers, source)
 
     handler_order = urllib2.UnknownHandler.handler_order - 1
 setattr(RsyncHandler, 'rsync+rsh_open', RsyncHandler.rsync_rsh_open)
@@ -94,7 +99,7 @@ class TestRsyncHandler(unittest.TestCase):
     def fake_check_call(self, argv, **kwargs):
         if argv[-2] == TestRsyncHandler.fail_url:
             raise urllib2.URLError('fail url')
-        if os.path.exists(argv[-1]):
+        if not os.path.exists(argv[-1]):
             open(argv[-1], 'w').write(TestRsyncHandler.file_data)
 
     def test_urlopen(self):
