@@ -128,6 +128,8 @@ class DownloadManager:
         logging.info('Waiting {timeout} to retry {uri}'.format(timeout=timeout, uri=f.uri))
         time.sleep(timeout)
         logging.info('Failure timeout for {uri} complete'.format(uri=f.uri))
+        with self._action_required:
+            self._action_required.notify()
 
     def __contains__(self, filename):
         with self._lock:
