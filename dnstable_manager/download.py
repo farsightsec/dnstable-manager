@@ -122,6 +122,9 @@ class DownloadManager:
             with self._lock:
                 self._failed_downloads[f] = expire_thread
 
+        with self._action_required:
+            self._action_required.notify()
+
     def _expire_failed_download(self, f, timeout=None):
         if timeout is None:
             timeout = self._retry_timeout
