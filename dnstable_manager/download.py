@@ -8,6 +8,7 @@ import shutil
 import tempfile
 import time
 import threading
+import traceback
 import unittest
 import urllib2
 
@@ -112,6 +113,9 @@ class DownloadManager:
         except SystemExit:
             raise
         except:
+            logging.info('Download of {} failed'.format(f.uri))
+            logging.debug(traceback.format_exc())
+
             expire_thread = terminable_thread.Thread(target=self._expire_failed_download, args=(f,))
             expire_thread.setDaemon(False)
             expire_thread.start()
