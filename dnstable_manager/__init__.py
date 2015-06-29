@@ -12,12 +12,6 @@ import urlparse
 from dnstable_manager.download import DownloadManager
 from dnstable_manager.fileset import Fileset
 
-# TODO Central download manager would enable multiple DNSTableManager
-# instances to share a pool of outgoing connections.
-
-# TODO Better error handling is needed, including exception handling and
-# backoff.
-
 class DNSTableManager:
     def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, download_manager=None):
         self.fileset_uri = fileset_uri
