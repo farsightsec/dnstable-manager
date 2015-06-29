@@ -2,8 +2,10 @@ from __future__ import print_function
 
 from cStringIO import StringIO
 import email.utils
+import logging
 import mimetypes
 import os
+import pipes
 import subprocess
 import tempfile
 import urllib
@@ -50,6 +52,7 @@ class RsyncHandler(urllib2.BaseHandler):
         tf = tempfile.mktemp(prefix='rsync--{}.'.format(fn))
 
         cmd_args.extend((source, tf))
+        logging.debug('Callling {}'.format(' '.join(map(pipes.quote, cmd_args))))
 
         stderr = tempfile.TemporaryFile()
         try:
@@ -63,8 +66,8 @@ class RsyncHandler(urllib2.BaseHandler):
         finally:
             try:
                 os.unlink(tf)
-            except OSError:
-                pass
+            except OSError as e:
+                logging.error('Error unlinking {}: {}'.format(tf, e))
 
         headers = StringIO()
         mtype = mimetypes.guess_type(source)[0]
@@ -80,6 +83,7 @@ class RsyncHandler(urllib2.BaseHandler):
 setattr(RsyncHandler, 'rsync+rsh_open', RsyncHandler.rsync_rsh_open)
 
 def install(*args, **kwargs):
+    logging.debug('Installing RsyncHandler')
     opener = urllib2.build_opener(RsyncHandler(*args, **kwargs))
     urllib2.install_opener(opener)
 

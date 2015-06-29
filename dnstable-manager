@@ -12,6 +12,7 @@ def main():
     parser.add_argument('--rsync-rsh', default='ssh')
     parser.add_argument('--base')
     parser.add_argument('--frequency', type=int, default=1800)
+    parser.add_argument('--verbosity', '-v', action='count')
     parser.add_argument('fileset_uri')
     parser.add_argument('destination')
     args = parser.parse_args()
@@ -23,7 +24,15 @@ def main():
 
     logger = logging.getLogger()
     logger.addHandler(logging.StreamHandler())
-    logger.setLevel(logging.INFO)
+
+    if not args.verbosity:
+        logger.setLevel(logging.ERROR)
+    elif args.verbosity == 1:
+        logger.setLevel(logging.WARNING)
+    elif args.verbosity == 2:
+        logger.setLevel(logging.INFO)
+    else:
+        logger.setLevel(logging.DEBUG)
 
     manager = DNSTableManager(args.fileset_uri, args.destination, base=args.base, frequency=args.frequency)
     manager.run()

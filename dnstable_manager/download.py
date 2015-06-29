@@ -113,7 +113,7 @@ class DownloadManager:
         except SystemExit:
             raise
         except:
-            logging.info('Download of {} failed'.format(f.uri))
+            logging.error('Download of {} failed'.format(f.uri))
             logging.debug(traceback.format_exc())
 
             expire_thread = terminable_thread.Thread(target=self._expire_failed_download, args=(f,))
@@ -121,14 +121,14 @@ class DownloadManager:
             expire_thread.start()
             with self._lock:
                 self._failed_downloads[f] = expire_thread
-
-        with self._action_required:
-            self._action_required.notify()
+        finally:
+            with self._action_required:
+                self._action_required.notify()
 
     def _expire_failed_download(self, f, timeout=None):
         if timeout is None:
             timeout = self._retry_timeout
-        logging.info('Waiting {timeout} to retry {uri}'.format(timeout=timeout, uri=f.uri))
+        logging.debug('Waiting {timeout} to retry {uri}'.format(timeout=timeout, uri=f.uri))
         time.sleep(timeout)
         logging.info('Failure timeout for {uri} complete'.format(uri=f.uri))
         with self._action_required:

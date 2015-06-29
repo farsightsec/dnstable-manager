@@ -363,6 +363,7 @@ class Fileset(object):
             old_fileset = set(open(fileset_fname).readlines())
         except IOError as e:
             if e.errno == errno.ENOENT:
+                logging.debug('Fileset {} does not exist.  Starting with a blank one.'.format(fileset_fname))
                 old_fileset = set()
             else:
                 raise
@@ -396,12 +397,14 @@ class Fileset(object):
         for fname in fp:
             fname = fname.rstrip()
 
-            # TODO log warnings
             if os.path.basename(fname) != fname:
+                logging.debug('Skipping {}.  Not a basename.'.format(fname))
                 continue
             if not fname.startswith('{}.'.format(self.base)):
+                logging.debug('Skipping {}.  Base is not {}.'.format(fname, self.base))
                 continue
             if not fname.endswith('.{}'.format(self.extension)):
+                logging.debug('Skipping {}.  Extensions is not {}.'.format(fname, self.extension))
                 continue
 
             self.remote_files.add(File(fname, dname=self.dname, uri=relative_uri(self.uri, fname)))
