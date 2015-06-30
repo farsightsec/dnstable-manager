@@ -84,7 +84,7 @@ class DNSTableManager:
                 self.fileset.load_remote_fileset()
                 last_remote_load = now
 
-            for f in sorted(self.fileset.missing_files()):
+            for f in sorted(self.fileset.missing_files(), reverse=True):
                 if f not in self.download_manager:
                     self.download_manager.enqueue(f)
 
