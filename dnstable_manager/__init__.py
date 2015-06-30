@@ -58,6 +58,23 @@ class DNSTableManager:
             self.download_manager = DownloadManager()
             self.download_manager.start()
 
+        self.thread = None
+
+    def start(self):
+        if self.thread:
+            raise Exception
+
+        self.thread = threading.Thread(target=self.run)
+        self.thread.setDaemon(False)
+        self.thread.start()
+
+    def join(self):
+        if not self.thread:
+            raise Exception
+
+        self.thread.join()
+        self.thread = None
+
     def run(self):
         last_remote_load = 0
         while True:
