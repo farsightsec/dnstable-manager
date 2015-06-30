@@ -1,0 +1,77 @@
+id: http://farsightsecurity.com/dnstable-manager-config-schema#
+$schema: http://json-schema.org/draft-04/schema#
+title: dnstable manager
+description: configuration for dnstable manager application
+type: object
+properties:
+        manager:
+                type: object
+                properties:
+                        log_stream:
+                                type: string
+                                enum:
+                                        - stderr
+                                        - stdout
+                        log_file:
+                                type: string
+                        log_level:
+                                type: string
+                                enum:
+                                        - CRITICAL
+                                        - ERROR
+                                        - WARNING
+                                        - INFO
+                                        - DEBUG
+                required:
+                        - log_level
+        downloader:
+                type: object
+                properties:
+                        max_downloads:
+                                type: integer
+                                minimum: 1
+                        retry_timeout:
+                                type: number
+                                minimum: 0
+                                exclusiveMinimum: true
+                        tempdir:
+                                type: string
+                        rsync_rsh:
+                                type: string
+                required:
+                        - max_downloads
+                        - retry_timeout
+                        - tempdir
+                        - rsync_rsh
+        filesets:
+                type: object
+                minProperties: 1
+                patternProperties:
+                        "^[a-z]+$":
+                                type: object
+                                properties:
+                                        uri:
+                                                type: string
+                                                format: uri
+                                        destination:
+                                                type: string
+                                        base:
+                                                type: string
+                                                pattern: '^[a-z]+(?:--[a-z]+)?$'
+                                        extension:
+                                                type: string
+                                                pattern: '^[a-z]+$'
+                                        frequency:
+                                                type: number
+                                                minimum: 0
+                                                exclusiveMinimum: true
+                                required:
+                                        - uri
+                                        - destination
+                                        - base
+                                        - extension
+                                        - frequency
+required: 
+        - manager
+        - downloader
+        - filesets

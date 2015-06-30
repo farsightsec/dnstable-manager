@@ -9,8 +9,32 @@ import unittest
 import urllib2
 import urlparse
 
+from dictmerge import dictmerge
 from dnstable_manager.download import DownloadManager
 from dnstable_manager.fileset import Fileset
+import jsonschema
+import pkg_resources
+import yaml
+
+def get_config(filename=None, stream=None, validate=True):
+    config = yaml.safe_load(pkg_resources.resource_stream(__name__, 'default-config.yaml'))
+
+    if filename:
+        config = dictmerge(config, yaml.safe_load(open(filename)))
+
+    if stream:
+        config = dictmerge(config, yaml.safe_load(stream))
+
+    if validate:
+        schema = yaml.safe_load(pkg_resources.resource_stream(__name__, 'config-schema.yaml'))
+        jsonschema.validate(config, schema)
+
+    return config
+
+class TestGetConfig(unittest.TestCase):
+    def test_get_config_default(self):
+        with self.assertRaises(jsonschema.ValidationError):
+            get_config()
 
 class DNSTableManager:
     def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, download_manager=None):

@@ -6,6 +6,12 @@ setup(
     packages = find_packages(),
 
     scripts = ['dnstable-manager'],
+    requires = [
+        'dictmerge',
+        'jsonschema',
+        'PyYAML',
+        'setuptools',
+        ],
 
     test_suite='dnstable_manager',
 
