@@ -23,7 +23,6 @@ def main():
     dnstable_manager.rsync.install(rsync_rsh=args.rsync_rsh)
 
     logger = logging.getLogger()
-    logger.addHandler(logging.StreamHandler())
 
     if not args.verbosity:
         logger.setLevel(logging.ERROR)
