@@ -98,7 +98,7 @@ class TestDNSTableManager(unittest.TestCase):
 
         td = tempfile.mkdtemp(prefix='test-dnstable-manager-run.')
         try:
-            d = DownloadManager(sleep_time=0.0001)
+            d = DownloadManager()
             d.start()
             m = DNSTableManager(fileset_uri, td, download_manager=d)
             self.assertRaises(Success, m.run)

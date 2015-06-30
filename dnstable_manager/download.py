@@ -16,7 +16,7 @@ from dnstable_manager.fileset import File
 import terminable_thread
 
 class DownloadManager:
-    def __init__(self, max_downloads=4, retry_timeout=60, sleep_time=1):
+    def __init__(self, max_downloads=4, retry_timeout=60):
         self._pending_downloads = set()
         self._active_downloads = dict()
 
@@ -24,7 +24,6 @@ class DownloadManager:
 
         self._max_downloads = max_downloads
         self._retry_timeout = retry_timeout
-        self._sleep_time = sleep_time
         self._lock = threading.RLock()
         
         self._main_thread = None
@@ -74,7 +73,7 @@ class DownloadManager:
                     self._active_downloads[f] = thread
 
             with self._action_required:
-                self._action_required.wait(self._sleep_time)
+                self._action_required.wait()
 
         with self._lock:
             for f,thread in self._active_downloads.items():
