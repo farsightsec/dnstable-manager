@@ -11,6 +11,7 @@ setup(
         'jsonschema',
         'PyYAML',
         'setuptools',
+        'terminable_thread',
         ],
 
     test_suite='dnstable_manager',
