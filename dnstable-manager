@@ -4,6 +4,7 @@ import argparse
 import logging
 import logging.handlers
 import os
+import signal
 import sys
 
 import daemon
@@ -19,7 +20,7 @@ def main():
 
     config = get_config(filename=args.config)
 
-    logger = logging.getLogger()
+    logger = logging.getLogger('dnstable_manager')
 
     if not args.verbosity:
         logger.setLevel(config['manager']['log_level'])
@@ -35,6 +36,7 @@ def main():
     else:
         formatter = logging.Formatter('%(asctime)s %(name)s: %(message)s')
 
+    files_preserve = []
 
     if 'log_stream' in config['manager']:
         handler = logging.StreamHandler(stream={
@@ -42,16 +44,23 @@ def main():
             'stdout' : sys.stdout,
             }.get(config['manager']['log_stream'], 'stderr'))
         handler.setFormatter(formatter)
+        files_preserve.append(handler.stream.fileno())
         logger.addHandler(handler)
 
     if 'log_file' in config['manager']:
         handler = logging.handlers.WatchedFileHandler(config['manager']['log_file'])
         handler.setFormatter(formatter)
-        logger.addHandler(handler)
+        files_preserve.append(handler.stream.fileno())
         logger.addHandler(handler)
 
     if config['manager']['daemon']:
-        with daemon.DaemonContext():
+        logger.debug('Daemonizing')
+        with daemon.DaemonContext(
+                signal_map={
+                    signal.SIGINT: sys.exit
+                },
+                files_preserve=files_preserve):
+
             run(config)
     else:
         run(config)
