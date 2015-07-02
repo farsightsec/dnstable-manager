@@ -359,6 +359,7 @@ class Fileset(object):
 
     def write_local_fileset(self):
         fileset_fname = os.path.join(self.dname, self.base + '.fileset')
+        logger.debug('Writing fileset to {}'.format(fileset_fname))
         
         # Read the old fileset, if it exists.
         try:
@@ -371,6 +372,7 @@ class Fileset(object):
                 raise
 
         if old_fileset.symmetric_difference(f.name for f in self.local_files) or not os.path.exists(fileset_fname):
+            logger.debug('Fileset {} has changed'.format(fileset_fname))
             with tempfile.NamedTemporaryFile(prefix='.{}.'.format(os.path.basename(fileset_fname)), dir=os.path.dirname(fileset_fname), delete=True) as out:
                 for f in sorted(self.local_files):
                     print (f.name, file=out)
@@ -400,13 +402,13 @@ class Fileset(object):
             fname = fname.rstrip()
 
             if os.path.basename(fname) != fname:
-                logger.debug('Skipping {}.  Not a basename.'.format(fname))
+                logger.warning('Skipping {}.  Not a basename.'.format(fname))
                 continue
             if not fname.startswith('{}.'.format(self.base)):
-                logger.debug('Skipping {}.  Base is not {}.'.format(fname, self.base))
+                logger.warning('Skipping {}.  Base is not {}.'.format(fname, self.base))
                 continue
             if not fname.endswith('.{}'.format(self.extension)):
-                logger.debug('Skipping {}.  Extensions is not {}.'.format(fname, self.extension))
+                logger.warning('Skipping {}.  Extensions is not {}.'.format(fname, self.extension))
                 continue
 
             self.remote_files.add(File(fname, dname=self.dname, uri=relative_uri(self.uri, fname)))

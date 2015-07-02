@@ -33,6 +33,7 @@ class DownloadManager:
         self._terminate = threading.Event() 
 
     def start(self):
+        logger.debug('Starting DownloadManager {:r}'.format(self))
         if self._main_thread:
             raise Exception('already running')
 
@@ -43,6 +44,7 @@ class DownloadManager:
         self._main_thread.start()
 
     def stop(self, blocking=False, timeout=None):
+        logger.debug('Stopping DownloadManager {:r}'.format(self))
         self._terminate.set()
         with self._action_required:
             self._action_required.notifyAll()
@@ -50,18 +52,23 @@ class DownloadManager:
             return self.join(timeout=timeout)
 
     def join(self, timeout=None):
+        logger.debug('Joining DownloadManager {:r}'.format(self))
         return self._main_thread.join(timeout=timeout)
 
     def _run(self):
+        logger.debug('Running DownloadManager {:r}'.format(self))
         while not self._terminate.is_set():
+            logger.debug('tick')
             with self._lock:
                 for f,thread in self._active_downloads.items():
                     if not thread.isAlive():
                         del self._active_downloads[f]
+                        logger.debug('Joining {:r}'.format(thread))
                         thread.join()
                 for f,thread in self._failed_downloads.items():
                     if not thread.isAlive():
                         del self._failed_downloads[f]
+                        logger.debug('Joining {:r}'.format(thread))
                         thread.join()
 
             with self._lock:
@@ -77,6 +84,7 @@ class DownloadManager:
             with self._action_required:
                 self._action_required.wait()
 
+        logger.debug('Completing DownloadManager run {:r}'.format(self))
         with self._lock:
             for f,thread in self._active_downloads.items():
                 thread.terminate()
@@ -88,6 +96,7 @@ class DownloadManager:
                 del self._failed_downloads[f]
         
     def _download(self, f):
+        logger.debug('Downloading {}'.format(f))
         try:
             if f.dname:
                 target = os.path.join(f.dname, f.name)
@@ -113,8 +122,9 @@ class DownloadManager:
             raise
         except SystemExit:
             raise
-        except:
+        except Exception as e:
             logger.error('Download of {} failed'.format(f.uri))
+            logger.info(str(e))
             logger.debug(traceback.format_exc())
 
             expire_thread = terminable_thread.Thread(target=self._expire_failed_download, args=(f,))

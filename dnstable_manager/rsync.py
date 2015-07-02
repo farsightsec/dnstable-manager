@@ -21,6 +21,7 @@ class RsyncHandler(urllib2.BaseHandler):
         self.tmpdir = tmpdir
 
     def rsync_rsh_open(self, req):
+        logger.debug('Opening rsync+rsh')
         host = req.get_host()
         if not host:
             raise urllib2.URLError('rsync+ssh error: not host given')
@@ -35,6 +36,7 @@ class RsyncHandler(urllib2.BaseHandler):
         return self.do_rsync(source, attrs=attrs)
 
     def rsync_open(self, req):
+        logger.debug('Opening rsync')
         source, attrs = urllib.splitattr(req.get_full_url())
         return self.do_rsync(source, attrs=attrs)
 
@@ -76,8 +78,14 @@ class RsyncHandler(urllib2.BaseHandler):
         mtype = mimetypes.guess_type(source)[0]
         if mtype:
             print ('Content-type: {}'.format(mtype), file=headers)
+        logger.debug('Content-type: {}'.format(mtype))
+
         print ('Content-length: {:0d}'.format(tf_stat.st_size), file=headers)
+        logger.debug('Content-length: {:0d}'.format(tf_stat.st_size))
+
         print ('Last-modified: {}'.format(email.utils.formatdate(tf_stat.st_mtime, usegmt=True)), file=headers)
+        logger.debug('Last-modified: {}'.format(email.utils.formatdate(tf_stat.st_mtime, usegmt=True)))
+
         headers.seek(0)
 
         return urllib.addinfourl(fp, headers, source)
