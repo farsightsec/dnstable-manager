@@ -29,14 +29,14 @@ def main():
     else:
         logger.setLevel(logging.DEBUG)
 
-    if config['manager']['log_stream']:
+    if 'log_stream' in config['manager']:
         handler = logging.StreamHandler(stream={
             'stderr' : sys.stderr,
             'stdout' : sys.stdout,
             }.get(config['manager']['log_stream'], 'stderr'))
         logging.addHandler(handler)
 
-    if config['manager']['log_file']:
+    if 'log_file' in config['manager']:
         handler = logging.WatchedFileHandler(config['manager']['log_file'])
         logging.addHandler(handler)
 
