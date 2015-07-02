@@ -53,6 +53,12 @@ def main():
         files_preserve.append(handler.stream.fileno())
         logger.addHandler(handler)
 
+    if config['manager'].get('syslog', False):
+        handler = logging.handlers.SysLogHandler(facility=config['manager'].get('syslog_facility', 'USER').lower())
+        handler.setFormatter(formatter)
+        files_preserve.append(handler.socket.fileno())
+        logger.addHandler(handler)
+
     if config['manager']['daemon']:
         logger.debug('Daemonizing')
         with daemon.DaemonContext(

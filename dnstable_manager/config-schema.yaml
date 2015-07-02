@@ -16,6 +16,42 @@ properties:
                                         - stdout
                         log_file:
                                 type: string
+                        syslog:
+                                type: boolean
+                        syslog_facility:
+                                type: string
+                                enum:
+                                        - ALERT
+                                        - AUTH
+                                        - CONS
+                                        - CRIT
+                                        - CRON
+                                        - DAEMON
+                                        - DEBUG
+                                        - EMERG
+                                        - ERR
+                                        - INFO
+                                        - KERN
+                                        - LOCAL0
+                                        - LOCAL1
+                                        - LOCAL2
+                                        - LOCAL3
+                                        - LOCAL4
+                                        - LOCAL5
+                                        - LOCAL6
+                                        - LOCAL7
+                                        - LPR
+                                        - MAIL
+                                        - NDELAY
+                                        - NEWS
+                                        - NOTICE
+                                        - NOWAIT
+                                        - PERROR
+                                        - PID
+                                        - SYSLOG
+                                        - USER
+                                        - UUCP
+                                        - WARNING
                         log_level:
                                 type: string
                                 enum:
