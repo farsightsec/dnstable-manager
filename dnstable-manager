@@ -37,7 +37,7 @@ def main():
         logging.addHandler(handler)
 
     if 'log_file' in config['manager']:
-        handler = logging.WatchedFileHandler(config['manager']['log_file'])
+        handler = logging.handlers.WatchedFileHandler(config['manager']['log_file'])
         logging.addHandler(handler)
 
     if config['manager']['daemon']:
