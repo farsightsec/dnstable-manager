@@ -29,16 +29,25 @@ def main():
         logger.setLevel(logging.INFO)
     else:
         logger.setLevel(logging.DEBUG)
+        
+    if logger.getEffectiveLevel() == logging.DEBUG:
+        formatter = logging.Formatter('%(asctime)s %(name)s[%(lineno)d] %(levelname)s: %(message)s')
+    else:
+        formatter = logging.Formatter('%(asctime)s %(name)s: %(message)s')
+
 
     if 'log_stream' in config['manager']:
         handler = logging.StreamHandler(stream={
             'stderr' : sys.stderr,
             'stdout' : sys.stdout,
             }.get(config['manager']['log_stream'], 'stderr'))
+        handler.setFormatter(formatter)
         logger.addHandler(handler)
 
     if 'log_file' in config['manager']:
         handler = logging.handlers.WatchedFileHandler(config['manager']['log_file'])
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
         logger.addHandler(handler)
 
     if config['manager']['daemon']:
