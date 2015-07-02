@@ -15,6 +15,8 @@ import urllib2
 from dnstable_manager.fileset import File
 import terminable_thread
 
+logger = logging.getLogger(__name__)
+
 class DownloadManager:
     def __init__(self, max_downloads=4, retry_timeout=60):
         self._pending_downloads = set()
@@ -92,7 +94,7 @@ class DownloadManager:
             else:
                 target = f.name
 
-            logging.info('Downloading {}'.format(f.uri))
+            logger.info('Downloading {}'.format(f.uri))
 
             fp = urllib2.urlopen(f.uri)
             out = tempfile.NamedTemporaryFile(prefix='.{}.'.format(f.name), dir=f.dname)
@@ -103,7 +105,7 @@ class DownloadManager:
             os.rename(out.name, target)
             out.delete = False
 
-            logging.info('Download of {} complete'.format(f.uri))
+            logger.info('Download of {} complete'.format(f.uri))
 
             with self._action_required:
                 self._action_required.notify()
@@ -112,8 +114,8 @@ class DownloadManager:
         except SystemExit:
             raise
         except:
-            logging.error('Download of {} failed'.format(f.uri))
-            logging.debug(traceback.format_exc())
+            logger.error('Download of {} failed'.format(f.uri))
+            logger.debug(traceback.format_exc())
 
             expire_thread = terminable_thread.Thread(target=self._expire_failed_download, args=(f,))
             expire_thread.setDaemon(False)
@@ -127,9 +129,9 @@ class DownloadManager:
     def _expire_failed_download(self, f, timeout=None):
         if timeout is None:
             timeout = self._retry_timeout
-        logging.debug('Waiting {timeout} to retry {uri}'.format(timeout=timeout, uri=f.uri))
+        logger.debug('Waiting {timeout} to retry {uri}'.format(timeout=timeout, uri=f.uri))
         time.sleep(timeout)
-        logging.info('Failure timeout for {uri} complete'.format(uri=f.uri))
+        logger.info('Failure timeout for {uri} complete'.format(uri=f.uri))
         with self._action_required:
             self._action_required.notify()
 
@@ -138,7 +140,7 @@ class DownloadManager:
             return filename in self._pending_downloads or filename in self._active_downloads or filename in self._failed_downloads
 
     def enqueue(self, f):
-        logging.info('Enqueuing {}'.format(os.path.basename(f.name)))
+        logger.info('Enqueuing {}'.format(os.path.basename(f.name)))
 
         with self._lock:
             self._pending_downloads.add(f)

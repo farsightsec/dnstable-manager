@@ -3,7 +3,9 @@
 import argparse
 import logging
 import os
+import sys
 
+import daemon
 from dnstable_manager.download import DownloadManager
 from dnstable_manager import DNSTableManager, get_config
 import dnstable_manager.rsync
@@ -14,10 +16,12 @@ def main():
     parser.add_argument('--verbosity', '-v', action='count')
     args = parser.parse_args()
 
+    config = get_config(filename=args.config)
+
     logger = logging.getLogger()
 
     if not args.verbosity:
-        logger.setLevel(logging.ERROR)
+        logger.setLevel(config['manager']['log_level'])
     elif args.verbosity == 1:
         logger.setLevel(logging.WARNING)
     elif args.verbosity == 2:
@@ -25,8 +29,24 @@ def main():
     else:
         logger.setLevel(logging.DEBUG)
 
-    config = get_config(filename=args.config)
+    if config['manager']['log_stream']:
+        handler = logging.StreamHandler(stream={
+            'stderr' : sys.stderr,
+            'stdout' : sys.stdout,
+            }.get(config['manager']['log_stream'], 'stderr'))
+        logging.addHandler(handler)
 
+    if config['manager']['log_file']:
+        handler = logging.WatchedFileHandler(config['manager']['log_file'])
+        logging.addHandler(handler)
+
+    if config['manager']['daemon']:
+        with daemon.DaemonContext():
+            run(config)
+    else:
+        run(config)
+
+def run(config):
     dnstable_manager.rsync.install(
             rsync_rsh=config['downloader']['rsync_rsh'],
             tmpdir=config['downloader']['tempdir'])

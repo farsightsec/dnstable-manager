@@ -12,6 +12,8 @@ import urllib
 import urllib2
 import unittest
 
+logger = logging.getLogger(__name__)
+
 class RsyncHandler(urllib2.BaseHandler):
     def __init__(self, rsync_path='rsync', rsync_rsh=None, tmpdir=None):
         self.rsync_path = rsync_path
@@ -53,7 +55,7 @@ class RsyncHandler(urllib2.BaseHandler):
         tf = tempfile.mktemp(prefix='rsync--{}.'.format(fn), dir=self.tmpdir)
 
         cmd_args.extend((source, tf))
-        logging.debug('Callling {}'.format(' '.join(map(pipes.quote, cmd_args))))
+        logger.debug('Callling {}'.format(' '.join(map(pipes.quote, cmd_args))))
 
         stderr = tempfile.TemporaryFile(dir=self.tmpdir)
         try:
@@ -68,7 +70,7 @@ class RsyncHandler(urllib2.BaseHandler):
             try:
                 os.unlink(tf)
             except OSError as e:
-                logging.error('Error unlinking {}: {}'.format(tf, e))
+                logger.error('Error unlinking {}: {}'.format(tf, e))
 
         headers = StringIO()
         mtype = mimetypes.guess_type(source)[0]
@@ -84,7 +86,7 @@ class RsyncHandler(urllib2.BaseHandler):
 setattr(RsyncHandler, 'rsync+rsh_open', RsyncHandler.rsync_rsh_open)
 
 def install(*args, **kwargs):
-    logging.debug('Installing RsyncHandler')
+    logger.debug('Installing RsyncHandler')
     opener = urllib2.build_opener(RsyncHandler(*args, **kwargs))
     urllib2.install_opener(opener)
 

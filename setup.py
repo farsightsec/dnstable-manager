@@ -9,6 +9,7 @@ setup(
     requires = [
         'dictmerge',
         'jsonschema',
+        'python_daemon',
         'PyYAML',
         'setuptools',
         'terminable_thread',
