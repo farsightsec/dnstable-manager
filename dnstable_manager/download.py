@@ -33,7 +33,7 @@ class DownloadManager:
         self._terminate = threading.Event() 
 
     def start(self):
-        logger.debug('Starting DownloadManager {:r}'.format(self))
+        logger.debug('Starting DownloadManager {}'.format(self))
         if self._main_thread:
             raise Exception('already running')
 
@@ -44,7 +44,7 @@ class DownloadManager:
         self._main_thread.start()
 
     def stop(self, blocking=False, timeout=None):
-        logger.debug('Stopping DownloadManager {:r}'.format(self))
+        logger.debug('Stopping DownloadManager {}'.format(self))
         self._terminate.set()
         with self._action_required:
             self._action_required.notifyAll()
@@ -52,23 +52,23 @@ class DownloadManager:
             return self.join(timeout=timeout)
 
     def join(self, timeout=None):
-        logger.debug('Joining DownloadManager {:r}'.format(self))
+        logger.debug('Joining DownloadManager {}'.format(self))
         return self._main_thread.join(timeout=timeout)
 
     def _run(self):
-        logger.debug('Running DownloadManager {:r}'.format(self))
+        logger.debug('Running DownloadManager {}'.format(self))
         while not self._terminate.is_set():
             logger.debug('tick')
             with self._lock:
                 for f,thread in self._active_downloads.items():
                     if not thread.isAlive():
                         del self._active_downloads[f]
-                        logger.debug('Joining {:r}'.format(thread))
+                        logger.debug('Joining {}'.format(thread))
                         thread.join()
                 for f,thread in self._failed_downloads.items():
                     if not thread.isAlive():
                         del self._failed_downloads[f]
-                        logger.debug('Joining {:r}'.format(thread))
+                        logger.debug('Joining {}'.format(thread))
                         thread.join()
 
             with self._lock:
@@ -84,7 +84,7 @@ class DownloadManager:
             with self._action_required:
                 self._action_required.wait()
 
-        logger.debug('Completing DownloadManager run {:r}'.format(self))
+        logger.debug('Completing DownloadManager run {}'.format(self))
         with self._lock:
             for f,thread in self._active_downloads.items():
                 thread.terminate()
