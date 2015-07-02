@@ -359,11 +359,10 @@ class Fileset(object):
 
     def write_local_fileset(self):
         fileset_fname = os.path.join(self.dname, self.base + '.fileset')
-        logger.debug('Writing fileset to {}'.format(fileset_fname))
         
         # Read the old fileset, if it exists.
         try:
-            old_fileset = set(open(fileset_fname).readlines())
+            old_fileset = set(line.rstrip() for line in open(fileset_fname))
         except IOError as e:
             if e.errno == errno.ENOENT:
                 logger.debug('Fileset {} does not exist.  Starting with a blank one.'.format(fileset_fname))
