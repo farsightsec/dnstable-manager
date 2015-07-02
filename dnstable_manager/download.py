@@ -47,6 +47,7 @@ class DownloadManager:
         logger.debug('Stopping DownloadManager {}'.format(self))
         self._terminate.set()
         with self._action_required:
+            logger.debug('Notifying all run loops')
             self._action_required.notifyAll()
         if blocking or timeout:
             return self.join(timeout=timeout)
@@ -58,7 +59,6 @@ class DownloadManager:
     def _run(self):
         logger.debug('Running DownloadManager {}'.format(self))
         while not self._terminate.is_set():
-            logger.debug('tick')
             with self._lock:
                 for f,thread in self._active_downloads.items():
                     if not thread.isAlive():
@@ -82,7 +82,9 @@ class DownloadManager:
                     self._active_downloads[f] = thread
 
             with self._action_required:
+                logger.debug('Waiting DownloadManager {}'.format(self))
                 self._action_required.wait()
+                logger.debug('Awoken DownloadManager {}'.format(self))
 
         logger.debug('Completing DownloadManager run {}'.format(self))
         with self._lock:
@@ -103,24 +105,29 @@ class DownloadManager:
             else:
                 target = f.name
 
-            logger.info('Downloading {}'.format(f.uri))
+            logger.info('Downloading {} to {}'.format(f.uri, target))
 
             fp = urllib2.urlopen(f.uri)
             out = tempfile.NamedTemporaryFile(prefix='.{}.'.format(f.name), dir=f.dname)
 
+            logger.debug('Copying urlopen of {} to {}'.format(f.uri, out.name))
             shutil.copyfileobj(fp, out)
             out.file.close()
             os.chmod(out.name, 0o644)
+            logger.debug('Renaming {} to {}'.format(out.name, target))
             os.rename(out.name, target)
             out.delete = False
 
-            logger.info('Download of {} complete'.format(f.uri))
+            logger.info('Download of {} to {} complete'.format(f.uri, target))
 
             with self._action_required:
+                logger.debug('Notifying run loop')
                 self._action_required.notify()
         except KeyboardInterrupt:
+            logger.debug('Re-Raising KeyboardInterrupt')
             raise
         except SystemExit:
+            logger.debug('Re-Raising SystemExit')
             raise
         except Exception as e:
             logger.error('Download of {} failed'.format(f.uri))
@@ -134,6 +141,7 @@ class DownloadManager:
                 self._failed_downloads[f] = expire_thread
         finally:
             with self._action_required:
+                logger.debug('Notifying run loop')
                 self._action_required.notify()
 
     def _expire_failed_download(self, f, timeout=None):
@@ -143,6 +151,7 @@ class DownloadManager:
         time.sleep(timeout)
         logger.info('Failure timeout for {uri} complete'.format(uri=f.uri))
         with self._action_required:
+            logger.debug('Notifying run loop')
             self._action_required.notify()
 
     def __contains__(self, filename):
@@ -156,6 +165,7 @@ class DownloadManager:
             self._pending_downloads.add(f)
 
         with self._action_required:
+            logger.debug('Notifying run loop')
             self._action_required.notify()
 
 class TestDownloadManager(unittest.TestCase):
