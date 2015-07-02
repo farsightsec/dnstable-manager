@@ -35,11 +35,11 @@ def main():
             'stderr' : sys.stderr,
             'stdout' : sys.stdout,
             }.get(config['manager']['log_stream'], 'stderr'))
-        logging.addHandler(handler)
+        logger.addHandler(handler)
 
     if 'log_file' in config['manager']:
         handler = logging.handlers.WatchedFileHandler(config['manager']['log_file'])
-        logging.addHandler(handler)
+        logger.addHandler(handler)
 
     if config['manager']['daemon']:
         with daemon.DaemonContext():
