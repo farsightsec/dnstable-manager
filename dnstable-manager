@@ -27,8 +27,9 @@ def main():
 
     config = get_config(filename=args.config)
 
-    dnstable_manager.rsync.install(rsync_rsh=config['downloader']['rsync_rsh'])
-    os.putenv('TMPDIR', config['downloader']['tempdir'])
+    dnstable_manager.rsync.install(
+            rsync_rsh=config['downloader']['rsync_rsh'],
+            tmpdir=config['downloader']['tempdir'])
     download_manager = DownloadManager(
             max_downloads=config['downloader']['max_downloads'],
             retry_timeout=config['downloader']['retry_timeout'])

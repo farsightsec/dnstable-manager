@@ -13,9 +13,10 @@ import urllib2
 import unittest
 
 class RsyncHandler(urllib2.BaseHandler):
-    def __init__(self, rsync_path='rsync', rsync_rsh=None):
+    def __init__(self, rsync_path='rsync', rsync_rsh=None, tmpdir=None):
         self.rsync_path = rsync_path
         self.rsync_rsh = rsync_rsh
+        self.tmpdir = tmpdir
 
     def rsync_rsh_open(self, req):
         host = req.get_host()
@@ -49,12 +50,12 @@ class RsyncHandler(urllib2.BaseHandler):
             cmd_args.extend(('-e', options['rsync_rsh']))
 
         fn = source.rpartition('/')[2]
-        tf = tempfile.mktemp(prefix='rsync--{}.'.format(fn))
+        tf = tempfile.mktemp(prefix='rsync--{}.'.format(fn), dir=self.tmpdir)
 
         cmd_args.extend((source, tf))
         logging.debug('Callling {}'.format(' '.join(map(pipes.quote, cmd_args))))
 
-        stderr = tempfile.TemporaryFile()
+        stderr = tempfile.TemporaryFile(dir=self.tmpdir)
         try:
             subprocess.check_call(cmd_args, stderr=stderr)
 
