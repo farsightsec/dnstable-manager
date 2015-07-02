@@ -7,8 +7,8 @@ setup(
 
     scripts = ['dnstable-manager'],
     requires = [
-        'dictmerge',
         'jsonschema',
+        'option_merge',
         'python_daemon',
         'PyYAML',
         'setuptools',

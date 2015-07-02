@@ -9,21 +9,23 @@ import unittest
 import urllib2
 import urlparse
 
-from dictmerge import dictmerge
 from dnstable_manager.download import DownloadManager
 from dnstable_manager.fileset import Fileset
 import jsonschema
+import option_merge
 import pkg_resources
 import yaml
 
 def get_config(filename=None, stream=None, validate=True):
-    config = yaml.safe_load(pkg_resources.resource_stream(__name__, 'default-config.yaml'))
+    configs = [yaml.safe_load(pkg_resources.resource_stream(__name__, 'default-config.yaml'))]
 
     if filename:
-        config = dictmerge(config, yaml.safe_load(open(filename)))
+        configs.append(yaml.safe_load(open(filename)))
 
     if stream:
-        config = dictmerge(config, yaml.safe_load(stream))
+        configs.append(yaml.safe_load(stream))
+
+    config = option_merge.MergedOptions.using(*configs)
 
     if validate:
         schema = yaml.safe_load(pkg_resources.resource_stream(__name__, 'config-schema.yaml'))
