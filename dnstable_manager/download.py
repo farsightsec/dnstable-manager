@@ -116,6 +116,13 @@ class DownloadManager:
             shutil.copyfileobj(fp, out)
             out.file.close()
             os.chmod(out.name, 0o644)
+
+            mtime_tz = fp.info().getdate_tz('Last-Modified')
+            if mtime_tz:
+                mtime = time.mktime(mtime_tz[:-1]) + mtime_tz[-1]
+                logger.debug('Setting mtime of {} to {}'.format(out.name, time.ctime(mtime)))
+                os.utime(out.name, (mtime, mtime))
+
             logger.debug('Renaming {} to {}'.format(out.name, target))
             os.rename(out.name, target)
             out.delete = False
