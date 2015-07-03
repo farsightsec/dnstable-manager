@@ -1,11 +1,14 @@
 from __future__ import print_function
+
 from cStringIO import StringIO
+import httplib
 import os
 import shutil
 import tempfile
 import threading
 import time
 import unittest
+import urllib
 import urllib2
 import urlparse
 
@@ -123,11 +126,14 @@ class TestDNSTableManager(unittest.TestCase):
             )
 
         def my_urlopen(uri):
+            msg = httplib.HTTPMessage(StringIO())
             if uri == fileset_uri:
-                return StringIO('\n'.join(fileset + ('',)))
+                return urllib.addinfourl(StringIO('\n'.join(fileset + ('',))),
+                        msg, uri)
             else:
                 self.assertTrue(uri.startswith('{}/'.format(uri_base)))
-                return StringIO('{}'.format(uri[1+len(uri_base):]))
+                return urllib.addinfourl(StringIO('{}'.format(uri[1+len(uri_base):])),
+                        msg, uri)
         urllib2.urlopen = my_urlopen
 
         class Success(Exception): pass

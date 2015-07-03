@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from cStringIO import StringIO
 import email.utils
+import httplib
 import logging
 import mimetypes
 import os
@@ -87,8 +88,9 @@ class RsyncHandler(urllib2.BaseHandler):
         logger.debug('Last-modified: {}'.format(email.utils.formatdate(tf_stat.st_mtime, usegmt=True)))
 
         headers.seek(0)
+        msg = httplib.HTTPMessage(fp=headers, seekable=True)
 
-        return urllib.addinfourl(fp, headers, source)
+        return urllib.addinfourl(fp, msg, source)
 
     handler_order = urllib2.UnknownHandler.handler_order - 1
 setattr(RsyncHandler, 'rsync+rsh_open', RsyncHandler.rsync_rsh_open)

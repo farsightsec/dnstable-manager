@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from cStringIO import StringIO
 import heapq
+import httplib
 import logging
 import os
 import shutil
@@ -10,6 +11,7 @@ import time
 import threading
 import traceback
 import unittest
+import urllib
 import urllib2
 
 from dnstable_manager.fileset import File
@@ -185,9 +187,12 @@ class TestDownloadManager(unittest.TestCase):
         f.uri = 'http://example.com/{}'.format(f.name)
         def my_urlopen(uri):
             self.assertEquals(uri, f.uri)
-            return StringIO(test_data)
+            return urllib.addinfourl(StringIO(test_data), httplib.HTTPMessage(StringIO()), f.uri)
         urllib2.urlopen = my_urlopen
 
         m = DownloadManager()
-        m._download(f)
-        self.assertEquals(open(tf.name).read(), test_data)
+        try:
+            m._download(f)
+            self.assertEquals(open(tf.name).read(), test_data)
+        finally:
+            m.stop()
