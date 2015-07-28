@@ -2,11 +2,13 @@ from __future__ import print_function
 
 from cStringIO import StringIO
 import httplib
+import logging
 import os
 import shutil
 import tempfile
 import threading
 import time
+import traceback
 import unittest
 import urllib
 import urllib2
@@ -18,6 +20,8 @@ import jsonschema
 import option_merge
 import pkg_resources
 import yaml
+
+logger = logging.getLogger(__name__)
 
 def get_config(filename=None, stream=None, validate=True):
     configs = [yaml.safe_load(pkg_resources.resource_stream(__name__, 'default-config.yaml'))]
@@ -42,7 +46,7 @@ class TestGetConfig(unittest.TestCase):
             get_config()
 
 class DNSTableManager:
-    def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, download_manager=None):
+    def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, retry_timeout=60, download_manager=None):
         self.fileset_uri = fileset_uri
 
         self.destination = destination
@@ -54,13 +58,14 @@ class DNSTableManager:
 
         self.extension = extension
         self.frequency = frequency
+        self.retry_timeout = retry_timeout
 
         self.fileset = Fileset(self.fileset_uri, self.destination, self.base, self.extension)
 
         if download_manager:
             self.download_manager = download_manager
         else:
-            self.download_manager = DownloadManager()
+            self.download_manager = DownloadManager(retry_timeout=retry_timeout)
             self.download_manager.start()
 
         self.thread = None
@@ -81,13 +86,25 @@ class DNSTableManager:
         self.thread = None
 
     def run(self):
-        last_remote_load = 0
+        next_remote_load = 0
         while True:
             now = time.time()
             self.fileset.load_local_fileset()
-            if now - last_remote_load >= self.frequency:
-                self.fileset.load_remote_fileset()
-                last_remote_load = now
+
+            try:
+                if now >= next_remote_load:
+                    self.fileset.load_remote_fileset()
+                    next_remote_load = now + self.frequency
+            except urllib2.URLError as e:
+                logger.error('Failed to load remote fileset {}'.format(self.fileset_uri))
+                logger.info(str(e))
+                logger.debug(traceback.format_exc())
+                next_remote_load = now + self.retry_timeout
+            except urllib2.HTTPError as e:
+                logger.error('Failed to load remote fileset {}'.format(self.fileset_uri))
+                logger.info(str(e))
+                logger.debug(traceback.format_exc())
+                next_remote_load = now + self.retry_timeout
 
             for f in sorted(self.fileset.missing_files(), reverse=True):
                 if f not in self.download_manager:
