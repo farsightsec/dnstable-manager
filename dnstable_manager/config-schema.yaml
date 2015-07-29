@@ -79,12 +79,19 @@ properties:
                                 type: string
                         ssl_ca_file:
                                 type: string
+                        ssl_keyfile:
+                                type: string
+                        ssl_certfile:
+                                type: string
+                        ssl_ciphers:
+                                type: string
                 required:
                         - max_downloads
                         - retry_timeout
                         - tempdir
                         - rsync_rsh
                         - ssl_ca_file
+                        - ssl_ciphers
         filesets:
                 type: object
                 minProperties: 1

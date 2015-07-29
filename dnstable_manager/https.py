@@ -4,14 +4,10 @@ import ssl
 import socket
 import os
 
-_ca_file = '/etc/ssl/certs/ca-certificates.crt'
-
-def get_ca_file():
-    return _ca_file
-
-def set_ca_file(ca_file):
-    global _ca_file
-    _ca_file = ca_file
+ca_file = '/etc/ssl/certs/ca-certificates.crt'
+keyfile = None
+certfile = None
+ciphers = 'EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA384:EECDH+aRSA+SHA256:!EECDH+aRSA+RC4:EECDH:EDH+aRSA:!RC4:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS:@STRENGTH'
 
 class HTTPSConnection(httplib.HTTPConnection):
     default_port = httplib.HTTPS_PORT
@@ -24,7 +20,9 @@ class HTTPSConnection(httplib.HTTPConnection):
         if self._tunnel_host:
             self.sock = sock
             self._tunnel()
-        self.sock = ssl.wrap_socket(sock, ca_certs=_ca_file, cert_reqs=ssl.CERT_REQUIRED)
+        self.sock = ssl.wrap_socket(sock, ssl_version=ssl.PROTOCOL_TLSv1,
+                ca_certs=ca_file, cert_reqs=ssl.CERT_REQUIRED,
+                keyfile=keyfile, certfile=certfile, ciphers=ciphers)
 
 class HTTPSHandler(urllib2.HTTPSHandler):
     def https_open(self, req):
