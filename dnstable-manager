@@ -76,12 +76,12 @@ def main():
 def run(config):
     password_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
     auth_handler = urllib2.HTTPBasicAuthHandler(password_manager)
-    opener = urllib2.build_opener(auth_handler)
-    urllib2.install_opener(opener)
-
-    dnstable_manager.rsync.install(
+    rsync_handler = dnstable_manager.rsync.RsyncHandler(
             rsync_rsh=config['downloader']['rsync_rsh'],
             tmpdir=config['downloader']['tempdir'])
+    opener = urllib2.build_opener(auth_handler, rsync_handler)
+    urllib2.install_opener(opener)
+
     download_manager = DownloadManager(
             max_downloads=config['downloader']['max_downloads'],
             retry_timeout=config['downloader']['retry_timeout'])
