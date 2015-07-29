@@ -12,6 +12,7 @@ import daemon
 from dnstable_manager.fileset import relative_uri
 from dnstable_manager.download import DownloadManager
 from dnstable_manager import DNSTableManager, get_config
+import dnstable_manager.https
 import dnstable_manager.rsync
 
 # time.strptime has a threading bug because it imports something
@@ -76,10 +77,11 @@ def main():
 def run(config):
     password_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
     auth_handler = urllib2.HTTPBasicAuthHandler(password_manager)
+    https_handler = dnstable_manager.https.HTTPSHandler()
     rsync_handler = dnstable_manager.rsync.RsyncHandler(
             rsync_rsh=config['downloader']['rsync_rsh'],
             tmpdir=config['downloader']['tempdir'])
-    opener = urllib2.build_opener(auth_handler, rsync_handler)
+    opener = urllib2.build_opener(auth_handler, https_handler, rsync_handler)
     urllib2.install_opener(opener)
 
     download_manager = DownloadManager(
