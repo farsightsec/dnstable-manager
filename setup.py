@@ -7,6 +7,7 @@ setup(
 
     scripts = ['dnstable-manager'],
     requires = [
+        'functools32',
         'jsonschema',
         'option_merge',
         'python_daemon',
