@@ -66,12 +66,7 @@ def main():
 
     if config['manager']['daemon']:
         logger.debug('Daemonizing')
-        with daemon.DaemonContext(
-                signal_map={
-                    signal.SIGINT: sys.exit
-                },
-                files_preserve=files_preserve):
-
+        with daemon.DaemonContext(files_preserve=files_preserve):
             run(config)
     else:
         run(config)
