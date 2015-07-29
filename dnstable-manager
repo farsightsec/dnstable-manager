@@ -5,11 +5,17 @@ import logging
 import logging.handlers
 import signal
 import sys
+import time
 
 import daemon
 from dnstable_manager.download import DownloadManager
 from dnstable_manager import DNSTableManager, get_config
 import dnstable_manager.rsync
+
+# time.strptime has a threading bug because it imports something
+# an attribute error is raised if two threads call it before that other
+# module has been loaded
+time.strptime('','')
 
 def main():
     parser = argparse.ArgumentParser()
