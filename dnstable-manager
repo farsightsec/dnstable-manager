@@ -74,10 +74,6 @@ def main():
 
             run(config)
     else:
-        def term_handler(signum, frame):
-            logger.debug('Received SIGTERM.  Exiting.')
-            sys.exit(signum)
-        signal.signal(signal.SIGTERM, term_handler)
         run(config)
 
 def run(config):
