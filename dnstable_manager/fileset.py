@@ -399,7 +399,7 @@ class Fileset(object):
     def load_remote_fileset(self):
         logger.info('Retrieving {}'.format(self.uri))
         fp = urllib2.urlopen(self.uri)
-        self.remote_files = set()
+        new_remote_files = set()
         for fname in fp:
             fname = fname.rstrip()
 
@@ -413,7 +413,9 @@ class Fileset(object):
                 logger.warning('Skipping {}.  Extensions is not {}.'.format(fname, self.extension))
                 continue
 
-            self.remote_files.add(File(fname, dname=self.dname, uri=relative_uri(self.uri, fname)))
+            new_remote_files.add(File(fname, dname=self.dname, uri=relative_uri(self.uri, fname)))
+
+        self.remote_files = new_remote_files
 
     def missing_files(self):
         return self.remote_files.difference(self.local_files)
