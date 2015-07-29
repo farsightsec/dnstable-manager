@@ -84,6 +84,8 @@ def run(config):
     opener = urllib2.build_opener(auth_handler, https_handler, rsync_handler)
     urllib2.install_opener(opener)
 
+    dnstable_manager.https.set_ca_file(config['downloader']['ssl_ca_file'])
+
     download_manager = DownloadManager(
             max_downloads=config['downloader']['max_downloads'],
             retry_timeout=config['downloader']['retry_timeout'])

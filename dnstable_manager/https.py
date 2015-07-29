@@ -6,6 +6,13 @@ import os
 
 _ca_file = '/etc/ssl/certs/ca-certificates.crt'
 
+def get_ca_file():
+    return _ca_file
+
+def set_ca_file(ca_file):
+    global _ca_file
+    _ca_file = ca_file
+
 class HTTPSConnection(httplib.HTTPConnection):
     default_port = httplib.HTTPS_PORT
 

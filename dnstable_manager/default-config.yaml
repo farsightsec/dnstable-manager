@@ -9,4 +9,5 @@ downloader:
         retry_timeout: 60
         tempdir: /tmp
         rsync_rsh: ssh
+        ssl_ca_file: /etc/ssl/certs/ca-certificates.crt
 filesets:

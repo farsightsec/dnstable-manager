@@ -77,11 +77,14 @@ properties:
                                 type: string
                         rsync_rsh:
                                 type: string
+                        ssl_ca_file:
+                                type: string
                 required:
                         - max_downloads
                         - retry_timeout
                         - tempdir
                         - rsync_rsh
+                        - ssl_ca_file
         filesets:
                 type: object
                 minProperties: 1
