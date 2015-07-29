@@ -357,8 +357,11 @@ class Fileset(object):
         self.pending_deletions.update(compute_overlap(self.local_files))
         self.local_files.difference_update(self.pending_deletions)
 
+    def get_fileset_name(self):
+        return os.path.join(self.dname, self.base + '.fileset')
+
     def write_local_fileset(self):
-        fileset_fname = os.path.join(self.dname, self.base + '.fileset')
+        fileset_fname = self.get_fileset_name()
         
         # Read the old fileset, if it exists.
         try:

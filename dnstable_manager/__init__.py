@@ -49,6 +49,9 @@ class DNSTableManager:
     def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, retry_timeout=60, download_manager=None):
         self.fileset_uri = fileset_uri
 
+        if not os.path.isdir(destination):
+            raise OSError(errno.ENOENT, 'Not a directory: \'{}\''.format(destination))
+
         self.destination = destination
 
         if base:
@@ -112,8 +115,24 @@ class DNSTableManager:
 
             self.fileset.prune_obsolete_files()
             self.fileset.prune_redundant_files()
-            self.fileset.write_local_fileset()
-            self.fileset.purge_deleted_files()
+
+            try:
+                self.fileset.write_local_fileset()
+            except IOError as e:
+                logger.error('Failed to write fileset {}'.format(self.fileset.get_fileset_name()))
+                logger.info(str(e))
+                logger.debug(traceback.format_exc())
+            except OSError as e:
+                logger.error('Failed to write fileset {}'.format(self.fileset.get_fileset_name()))
+                logger.info(str(e))
+                logger.debug(traceback.format_exc())
+
+            try:
+                self.fileset.purge_deleted_files()
+            except OSError as e:
+                logger.error('Failed to purge deleted files in'.format(self.destination))
+                logger.info(str(e))
+                logger.debug(traceback.format_exc())
 
             time.sleep(1)
 
