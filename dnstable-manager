@@ -6,8 +6,10 @@ import logging.handlers
 import signal
 import sys
 import time
+import urllib2
 
 import daemon
+from dnstable_manager.fileset import relative_uri
 from dnstable_manager.download import DownloadManager
 from dnstable_manager import DNSTableManager, get_config
 import dnstable_manager.rsync
@@ -72,6 +74,11 @@ def main():
         run(config)
 
 def run(config):
+    password_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
+    auth_handler = urllib2.HTTPBasicAuthHandler(password_manager)
+    opener = urllib2.build_opener(auth_handler)
+    urllib2.install_opener(opener)
+
     dnstable_manager.rsync.install(
             rsync_rsh=config['downloader']['rsync_rsh'],
             tmpdir=config['downloader']['tempdir'])
@@ -82,6 +89,12 @@ def run(config):
     fileset_managers = dict()
 
     for fileset,fileset_config in config['filesets'].items():
+        password_manager.add_password(
+                fileset_config.get('realm', None),
+                relative_uri(fileset_config['uri'], ''),
+                fileset_config.get('username', None),
+                fileset_config.get('password', None))
+
         manager = DNSTableManager(
                 fileset_uri=fileset_config['uri'],
                 destination=fileset_config['destination'],

@@ -92,6 +92,12 @@ properties:
                                         uri:
                                                 type: string
                                                 format: uri
+                                        realm:
+                                                type: string
+                                        username:
+                                                type: string
+                                        password:
+                                                type: string
                                         destination:
                                                 type: string
                                         base:
