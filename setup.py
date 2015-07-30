@@ -24,4 +24,6 @@ setup(
 
     author = 'Farsight Security Inc.',
     author_email = 'software@fsi.io',
+
+    zip_safe = True,
 )
