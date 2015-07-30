@@ -333,17 +333,18 @@ class Fileset(object):
         '{dname}/{base}.*.[YMWDHXm].{extension}'.
         """
 
+        if not os.path.isdir(dname):
+            raise Exception('Unable to open fileset directory: {}'.format(dname))
+
         self.uri = uri
         self.dname = dname
         self.base = base
         self.extension = extension
 
-        self.local_files = set()
-        self.remote_files = set()
+        self.local_files = None
+        self.load_local_fileset()
+        self.remote_files = set(self.local_files)
         self.pending_deletions = set()
-
-        if not os.path.isdir(dname):
-            raise Exception('Unable to open fileset directory: {}'.format(dname))
 
     def load_local_fileset(self):
         g_expr = '{}/{}.*.[YQMWDHXm].{}'.format(self.dname, self.base, self.extension)
