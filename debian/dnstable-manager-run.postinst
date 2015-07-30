@@ -1,0 +1,14 @@
+#!/bin/sh -e
+
+set +u
+#DEBHELPER#
+set -u
+
+test "$1" = 'configure' || exit 0
+
+SERVICE='dnstable-manager'
+
+update-service --add "/etc/sv/$SERVICE"
+
+test -z "$2" || sv -v term "$SERVICE" || :
+

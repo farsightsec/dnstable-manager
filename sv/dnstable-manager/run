@@ -1,0 +1,4 @@
+#!/bin/sh
+. /etc/default/dnstable-manager
+exec 2>&1
+exec chpst -u$USER:$GROUP /usr/bin/dnstable-manager --config $CONFIG_FILE

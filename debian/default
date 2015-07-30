@@ -1,0 +1,3 @@
+USER=root
+GROUP=root
+CONFIG_FILE=/etc/dnstable-manager/dnstable-manager.yaml

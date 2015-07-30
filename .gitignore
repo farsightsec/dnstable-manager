@@ -3,3 +3,8 @@
 /build
 /.coverage
 /coverage
+debian/*.log
+debian/*.debhelper
+debian/*.substvars
+debian/dnstable-manager/
+debian/files

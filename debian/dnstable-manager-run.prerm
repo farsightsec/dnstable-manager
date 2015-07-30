@@ -1,0 +1,12 @@
+#!/bin/sh -e
+
+set +u
+#DEBHELPER#
+set -u
+
+test "$1" = 'remove' || test "$1" = 'deconfigure' || \
+	test "$1" = 'failed-upgrade' || exit 0
+
+SERVICE="dnstable-manager"
+
+update-service --remove /etc/sv/$SERVICE || :

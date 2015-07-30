@@ -1,0 +1,5 @@
+dnstable-manager (0.1) debian-farsightsec; urgency=medium
+
+  * Initial release.
+
+ -- Henry Stern <stern@fsi.io>  Thu, 30 Jul 2015 13:56:19 -0300

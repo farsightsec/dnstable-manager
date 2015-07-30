@@ -1,0 +1,44 @@
+Source: dnstable-manager
+Section: utils
+Priority: extra
+Maintainer: Farsight Security, Inc. <software@farsightsecurity.com>
+Build-Depends: python, python-setuptools (>= 0.6b3), debhelper (>= 9),
+ dh-systemd,
+ python-daemon,
+ python-functools32,
+ python-jsonschema,
+ python-option-merge,
+ python-pkg-resources,
+ python-terminable-thread,
+ python-yaml
+Standards-Version: 3.9.5
+X-Python-Version: 2.7
+
+Package: dnstable-manager
+Section: utils
+Architecture: any
+Depends: ${misc:Depends}, ${python:Depends}, ${shlibs:Depends},
+ init-system-helpers,
+ python,
+ python-daemon,
+ python-functools32,
+ python-jsonschema,
+ python-option-merge,
+ python-pkg-resources,
+ python-terminable-thread,
+ python-yaml,
+Description: Farsight DNSTable Manager
+ This tool is designed to maintain local copies of DNSTable filesets.
+ Given an URL it will periodically download a remote fileset descriptor and
+ all files referenced within.  It will maintain a local fileset file that
+ references all files present on the local system and correctly handles files
+ as they are merged over time (eg. from hourly to daily).
+
+Package: dnstable-manager-run
+Section: utils
+Architecture: any
+Depends: dnstable-manager (= ${binary:Version}), runit
+Conflicts: systemd
+Description: Runit scripts for Farsight DNSTable Manager
+ In case your system does not have systemd installed you can use this to run
+ Farsight DNSTable Manager with runit.
