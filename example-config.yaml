@@ -1,0 +1,21 @@
+manager:
+        daemon: True
+        log_file: /var/log/dnstable-manager/dnstable-manager.log
+        log_level: ERROR
+downloader:
+        max_downloads: 4
+        retry_timeout: 60
+        tempdir: /srv/dnstable/tmp
+filesets:
+        dns:
+                uri: https://export.dnsdb.info/dnsdb-export/mtbl/dns.fileset
+                destination: /srv/dnstable/mtbl
+                base: dns
+                extension: mtbl
+                frequency: 600
+        dnssec:
+                uri: https://export.dnsdb.info/dnsdb-export/mtbl/dnssec.fileset
+                destination: /srv/dnstable/mtbl
+                base: dnssec
+                extension: mtbl
+                frequency: 600
