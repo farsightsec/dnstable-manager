@@ -2,7 +2,6 @@ import urllib2
 import httplib
 import ssl
 import socket
-import os
 
 ca_file = '/etc/ssl/certs/ca-certificates.crt'
 keyfile = None

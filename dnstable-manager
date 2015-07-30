@@ -3,7 +3,6 @@
 import argparse
 import logging
 import logging.handlers
-import signal
 import sys
 import time
 import urllib2

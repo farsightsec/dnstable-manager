@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 from cStringIO import StringIO
+import errno
 import httplib
 import logging
 import os
