@@ -16,6 +16,10 @@ setup(
         'terminable_thread',
         ],
 
+    package_data = {
+        'dnstable_manager': ['*.yaml'],
+    },
+
     test_suite='dnstable_manager',
 
     author = 'Farsight Security Inc.',
