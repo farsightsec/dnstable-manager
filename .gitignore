@@ -7,4 +7,5 @@ debian/*.log
 debian/*.debhelper
 debian/*.substvars
 debian/dnstable-manager/
+debian/dnstable-manager-run/
 debian/files
