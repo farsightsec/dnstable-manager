@@ -13,4 +13,3 @@ RestartSec=1
 EnvironmentFile=/etc/default/dnstable-manager
 User=$USER
 Group=$GROUP
-ProtectHome=true
