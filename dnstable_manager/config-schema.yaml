@@ -7,8 +7,6 @@ properties:
         manager:
                 type: object
                 properties:
-                        daemon:
-                                type: boolean
                         log_stream:
                                 type: string
                                 enum:
@@ -61,7 +59,6 @@ properties:
                                         - INFO
                                         - DEBUG
                 required:
-                        - daemon
                         - log_level
         downloader:
                 type: object

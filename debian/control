@@ -4,7 +4,6 @@ Priority: extra
 Maintainer: Farsight Security, Inc. <software@farsightsecurity.com>
 Build-Depends: python, python-setuptools (>= 0.6b3), debhelper (>= 9),
  dh-systemd,
- python-daemon,
  python-functools32,
  python-jsonschema,
  python-option-merge,
@@ -20,7 +19,6 @@ Architecture: any
 Depends: ${misc:Depends}, ${python:Depends}, ${shlibs:Depends},
  init-system-helpers,
  python,
- python-daemon,
  python-functools32,
  python-jsonschema,
  python-option-merge,

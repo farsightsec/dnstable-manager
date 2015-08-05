@@ -1,5 +1,4 @@
 manager:
-        daemon: True
         log_file: /var/log/dnstable-manager/dnstable-manager.log
         log_level: ERROR
 downloader:

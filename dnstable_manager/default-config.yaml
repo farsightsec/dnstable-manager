@@ -3,7 +3,6 @@ manager:
         log_level: ERROR
         syslog: false
         syslog_facility: USER
-        daemon: false
 downloader:
         max_downloads: 4
         retry_timeout: 60

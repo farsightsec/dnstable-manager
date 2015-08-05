@@ -7,7 +7,6 @@ import sys
 import time
 import urllib2
 
-import daemon
 from dnstable_manager.fileset import relative_uri
 from dnstable_manager.download import DownloadManager
 from dnstable_manager import DNSTableManager, get_config
@@ -66,14 +65,6 @@ def main():
         files_preserve.append(handler.socket.fileno())
         logger.addHandler(handler)
 
-    if config['manager']['daemon']:
-        logger.debug('Daemonizing')
-        with daemon.DaemonContext(files_preserve=files_preserve):
-            run(config)
-    else:
-        run(config)
-
-def run(config):
     password_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
     auth_handler = urllib2.HTTPBasicAuthHandler(password_manager)
     https_handler = dnstable_manager.https.HTTPSHandler()
