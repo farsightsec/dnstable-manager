@@ -93,7 +93,7 @@ properties:
                 type: object
                 minProperties: 1
                 patternProperties:
-                        "^[a-z]+$":
+                        "^[a-z\-]+$":
                                 type: object
                                 properties:
                                         uri:
