@@ -19,9 +19,11 @@ import dnstable_manager.rsync
 time.strptime('','')
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--config')
-    parser.add_argument('--verbosity', '-v', action='count')
+    parser = argparse.ArgumentParser(
+            description='Maintains local copies of remote filesets.  Supports http, https, ftp, file, rsync, rsync+rsh uri schemas.')
+    parser.add_argument('--config', help='Path to configuration file.')
+    parser.add_argument('--verbosity', '-v', action='count', 
+            help='Verbosity level.  Repeat to increase.')
     args = parser.parse_args()
 
     config = get_config(filename=args.config)
