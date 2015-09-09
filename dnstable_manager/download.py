@@ -128,10 +128,6 @@ class DownloadManager:
             out.delete = False
 
             logger.info('Download of {} to {} complete'.format(f.uri, target))
-
-            with self._action_required:
-                logger.debug('Notifying run loop')
-                self._action_required.notify()
         except KeyboardInterrupt:
             logger.debug('Re-Raising KeyboardInterrupt')
             raise
