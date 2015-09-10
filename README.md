@@ -54,6 +54,7 @@ Configuration of dnstable-manager is done with a single YAML file specified
 with the --config parameter on the command line.  It consists of three
 sections:
 
+```yaml
     manager:
         log_stream: 'stderr' or 'stdout'
         log_file: path to rotatable log file
@@ -79,3 +80,4 @@ sections:
 	    base: REQUIRED, prefix of fileset name (e.g. dns, dnssec, dns--com)
 	    extension: REQUIRED, suffix of files in set (e.g. mtbl)
             frequency: REQUIRED, how often to download the fileset
+```
