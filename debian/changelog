@@ -1,3 +1,12 @@
+dnstable-manager (0.2) debian-farsightsec; urgency=low
+
+  * default_config: remove empty default log file
+  * config: avoid duplicate destination/base
+  * dnstable-manager: remove remnants of daemonization
+  * fileset: allow unlinking to be disabled
+
+ -- Henry Stern <stern@fsi.io>  Mon, 14 Sep 2015 17:08:39 +0000
+
 dnstable-manager (0.1) debian-farsightsec; urgency=medium
 
   * Initial release.
