@@ -24,6 +24,8 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
+class ConfigException(Exception): pass
+
 def get_config(filename=None, stream=None, validate=True):
     configs = [yaml.safe_load(pkg_resources.resource_stream(__name__, 'default-config.yaml'))]
 
@@ -38,6 +40,13 @@ def get_config(filename=None, stream=None, validate=True):
     if validate:
         schema = yaml.safe_load(pkg_resources.resource_stream(__name__, 'config-schema.yaml'))
         jsonschema.validate(config, schema)
+
+        filesets = set()
+        for fileset,fileset_config in config['filesets'].items():
+            t = (fileset_config['destination'], fileset_config['base'])
+            if t in filesets:
+                raise ConfigException('Fileset {} collides with {}/{}.*'.format(fileset, *t))
+            filesets.add(t)
 
     return config
 
