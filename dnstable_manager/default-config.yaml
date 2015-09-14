@@ -1,5 +1,4 @@
 manager:
-        log_file: 
         log_level: ERROR
         syslog: false
         syslog_facility: USER
