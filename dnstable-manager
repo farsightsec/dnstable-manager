@@ -44,27 +44,22 @@ def main():
     else:
         formatter = logging.Formatter('%(asctime)s %(name)s: %(message)s')
 
-    files_preserve = []
-
     if 'log_stream' in config['manager']:
         handler = logging.StreamHandler(stream={
             'stderr' : sys.stderr,
             'stdout' : sys.stdout,
             }.get(config['manager']['log_stream'], 'stderr'))
         handler.setFormatter(formatter)
-        files_preserve.append(handler.stream.fileno())
         logger.addHandler(handler)
 
     if 'log_file' in config['manager']:
         handler = logging.handlers.WatchedFileHandler(config['manager']['log_file'])
         handler.setFormatter(formatter)
-        files_preserve.append(handler.stream.fileno())
         logger.addHandler(handler)
 
     if config['manager'].get('syslog', False):
         handler = logging.handlers.SysLogHandler(facility=config['manager'].get('syslog_facility', 'USER').lower())
         handler.setFormatter(formatter)
-        files_preserve.append(handler.socket.fileno())
         logger.addHandler(handler)
 
     password_manager = urllib2.HTTPPasswordMgrWithDefaultRealm()
