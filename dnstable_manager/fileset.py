@@ -14,6 +14,7 @@ import urllib
 import urllib2
 
 logger = logging.getLogger(__name__)
+disable_unlink = False
 
 def parse_datetime(s):
     """
@@ -389,7 +390,8 @@ class Fileset(object):
             fn = os.path.join(self.dname, f.name)
             logger.info('Unlinking {}'.format(fn))
             try:
-                os.unlink(fn)
+                if not disable_unlink:
+                    os.unlink(fn)
             except OSError as e:
                 if e.errno == errno.ENOENT:
                     logger.error('File vanished {}'.format(fn))

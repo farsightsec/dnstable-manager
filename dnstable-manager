@@ -24,6 +24,8 @@ def main():
     parser.add_argument('--config', help='Path to configuration file.')
     parser.add_argument('--verbosity', '-v', action='count', 
             help='Verbosity level.  Repeat to increase.')
+    parser.add_argument('--disable-unlink', action='store_true',
+            help='Disable unlinking of files.')
     args = parser.parse_args()
 
     config = get_config(filename=args.config)
@@ -38,6 +40,9 @@ def main():
         logger.setLevel(logging.INFO)
     else:
         logger.setLevel(logging.DEBUG)
+
+    if args.disable_unlink:
+        dnstable_manager.fileset.disable_unlink = True
         
     if logger.getEffectiveLevel() == logging.DEBUG:
         formatter = logging.Formatter('%(asctime)s %(name)s[%(lineno)d] %(levelname)s: %(message)s')
