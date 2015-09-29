@@ -108,7 +108,7 @@ class DNSTableManager:
                 if now >= next_remote_load:
                     self.fileset.load_remote_fileset()
                     next_remote_load = now + self.frequency
-            except (urllib2.URLError, urllib2.HTTPError, httplib.HTTPException) as e:
+            except (urllib2.URLError, urllib2.HTTPError, httplib.HTTPException, socket.error) as e:
                 logger.error('Failed to load remote fileset {}: {}'.format(self.fileset_uri, str(e)))
                 logger.debug(traceback.format_exc())
                 next_remote_load = now + self.retry_timeout
