@@ -15,13 +15,19 @@ class HTTPSConnection(httplib.HTTPConnection):
         httplib.HTTPConnection.__init__(self, *args, **kwargs)
 
     def connect(self):
-        sock = socket.create_connection((self.host, self.port), self.timeout, self.source_address)
+        try:
+            sock = socket.create_connection((self.host, self.port), self.timeout, self.source_address)
+        except socket.error as e:
+            raise urllib2.URLError(e)
         if self._tunnel_host:
             self.sock = sock
             self._tunnel()
-        self.sock = ssl.wrap_socket(sock, ssl_version=ssl.PROTOCOL_TLSv1,
-                ca_certs=ca_file, cert_reqs=ssl.CERT_REQUIRED,
-                keyfile=keyfile, certfile=certfile, ciphers=ciphers)
+        try:
+            self.sock = ssl.wrap_socket(sock, ssl_version=ssl.PROTOCOL_TLSv1,
+                    ca_certs=ca_file, cert_reqs=ssl.CERT_REQUIRED,
+                    keyfile=keyfile, certfile=certfile, ciphers=ciphers)
+        except (ssl.SSLError, ssl.CertificateError, socket.error) as e:
+            raise urllib2.URLError(e)
 
 class HTTPSHandler(urllib2.HTTPSHandler):
     def https_open(self, req):
