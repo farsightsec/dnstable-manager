@@ -354,7 +354,13 @@ class Fileset(object):
 
     def load_local_fileset(self):
         g_expr = '{}/{}.*.[YQMWDHXm].{}'.format(self.dname, self.base, self.extension)
-        self.local_files = set(File(os.path.basename(fname)) for fname in glob.glob(g_expr))
+        new_local_files = set()
+        for fname in glob.glob(g_expr):
+            try:
+                new_local_files.add(File(os.path.basename(fname)))
+            except ParseError as e:
+                logger.debug('Error parsing filename \'{}\': {}'.format(fname, str(e)))
+        self.local_files = new_local_files
 
     def prune_obsolete_files(self):
         self.pending_deletions.update(self.local_files.difference(self.remote_files).difference(compute_overlap(self.local_files.union(self.remote_files))))
