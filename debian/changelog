@@ -1,3 +1,14 @@
+dnstable-manager (0.3) debian-farsightsec; urgency=medium
+
+  * dnstable_manager: clean up exception handlers, handle httplib.HTTPException
+  * https: convert ssl and socket exceptions to URLError
+  * dnstable_manager: handle socket.error in load_remote_fileset
+  * fileset: add FilesetException, check for matching content-length
+  * download: Add Content-Length check
+  * fileset: handle local files with unparseable names
+
+ -- Henry Stern <stern@fsi.io>  Tue, 29 Sep 2015 09:53:32 -0300
+
 dnstable-manager (0.2) debian-farsightsec; urgency=low
 
   * default_config: remove empty default log file
