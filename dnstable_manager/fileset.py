@@ -4,6 +4,7 @@ from cStringIO import StringIO
 import datetime
 import errno
 import glob
+import httplib
 import logging
 import os
 import shutil
@@ -15,6 +16,10 @@ import urllib2
 
 logger = logging.getLogger(__name__)
 disable_unlink = False
+
+class FilesetError(Exception): pass
+
+class ParseError(FilesetError): pass
 
 def parse_datetime(s):
     """
@@ -40,7 +45,7 @@ def parse_datetime(s):
                 return datetime.datetime.utcfromtimestamp(calendar.timegm(time.strptime(s, fmt)))
         except ValueError:
             pass
-    raise ValueError("Time data '{}' does not match any of the time formats".format(s))
+    raise ParseError("Time data '{}' does not match any of the time formats".format(s))
 
 class TestParseDatetime(unittest.TestCase):
     def test_parse_datetime_minute(self):
@@ -59,23 +64,23 @@ class TestParseDatetime(unittest.TestCase):
         self.assertEqual(parse_datetime('2006'), datetime.datetime(2006, 1, 1, 0, 0))
 
     def test_parse_datetime_invalid(self):
-        self.assertRaises(ValueError, parse_datetime, '')
-        self.assertRaises(ValueError, parse_datetime, '2')
-        self.assertRaises(ValueError, parse_datetime, '20')
-        self.assertRaises(ValueError, parse_datetime, '200')
-        self.assertRaises(ValueError, parse_datetime, '20060')
-        self.assertRaises(ValueError, parse_datetime, '200600')
-        self.assertRaises(ValueError, parse_datetime, '200613')
-        self.assertRaises(ValueError, parse_datetime, '2006010')
-        self.assertRaises(ValueError, parse_datetime, '20060100')
-        self.assertRaises(ValueError, parse_datetime, '20060132')
-        self.assertRaises(ValueError, parse_datetime, '20060102.')
-        self.assertRaises(ValueError, parse_datetime, '20060102.1')
-        self.assertRaises(ValueError, parse_datetime, '20060102.15')
-        self.assertRaises(ValueError, parse_datetime, '20060102.150')
-        self.assertRaises(ValueError, parse_datetime, '20060102.2500')
-        self.assertRaises(ValueError, parse_datetime, '20060102.0060')
-        self.assertRaises(ValueError, parse_datetime, '20060102.1500.')
+        self.assertRaises(ParseError, parse_datetime, '')
+        self.assertRaises(ParseError, parse_datetime, '2')
+        self.assertRaises(ParseError, parse_datetime, '20')
+        self.assertRaises(ParseError, parse_datetime, '200')
+        self.assertRaises(ParseError, parse_datetime, '20060')
+        self.assertRaises(ParseError, parse_datetime, '200600')
+        self.assertRaises(ParseError, parse_datetime, '200613')
+        self.assertRaises(ParseError, parse_datetime, '2006010')
+        self.assertRaises(ParseError, parse_datetime, '20060100')
+        self.assertRaises(ParseError, parse_datetime, '20060132')
+        self.assertRaises(ParseError, parse_datetime, '20060102.')
+        self.assertRaises(ParseError, parse_datetime, '20060102.1')
+        self.assertRaises(ParseError, parse_datetime, '20060102.15')
+        self.assertRaises(ParseError, parse_datetime, '20060102.150')
+        self.assertRaises(ParseError, parse_datetime, '20060102.2500')
+        self.assertRaises(ParseError, parse_datetime, '20060102.0060')
+        self.assertRaises(ParseError, parse_datetime, '20060102.1500.')
 
 def relative_uri(uri, fn):
     path,query = urllib.splitquery(uri)
@@ -262,10 +267,10 @@ class File(object):
         try:
             tl = self.name.split('.')[-2]
         except IndexError:
-            raise ValueError('Unable to parse time letter from file name {}'.format(self.name))
+            raise ParseError('Unable to parse time letter from file name {}'.format(self.name))
 
         if not tl in File._valid_tl:
-            raise ValueError('Time letter {} not in valid set {}'.format(tl, File._valid_tl))
+            raise ParseError('Time letter {} not in valid set {}'.format(tl, File._valid_tl))
         self.tl = tl
 
     def _init_datetime(self):
@@ -278,8 +283,8 @@ class File(object):
 
         try:
             self.datetime = parse_datetime(datetime_string)
-        except ValueError:
-            raise ValueError('Unable to extract datetime from filename {}'.format(base_name))
+        except ParseError as e:
+            raise ParseError('Unable to extract datetime from filename {}: {}'.format(base_name, e))
 
     def __cmp__(self, other):
         return cmp(File._valid_tl.index(self.tl), File._valid_tl.index(other.tl)) or cmp(self.datetime, other.datetime) or cmp(self.name, other.name)
@@ -301,8 +306,8 @@ class TestFile(unittest.TestCase):
         self.assertEqual(f.datetime, datetime.datetime(2000,1,2,3,4))
 
     def test_init_invalid(self):
-        self.assertRaises(ValueError, File, 'test.Y.txt')
-        self.assertRaises(ValueError, File, 'test.200.Y.txt')
+        self.assertRaises(ParseError, File, 'test.Y.txt')
+        self.assertRaises(ParseError, File, 'test.200.Y.txt')
 
     def test_cmp(self):
         f1 = File('test.2000.Y.txt')
@@ -403,7 +408,9 @@ class Fileset(object):
         logger.info('Retrieving {}'.format(self.uri))
         fp = urllib2.urlopen(self.uri)
         new_remote_files = set()
+        read_len = 0
         for fname in fp:
+            read_len += len(fname)
             fname = fname.rstrip()
 
             if os.path.basename(fname) != fname:
@@ -417,6 +424,15 @@ class Fileset(object):
                 continue
 
             new_remote_files.add(File(fname, dname=self.dname, uri=relative_uri(self.uri, fname)))
+
+        if 'Content-Length' in fp.headers:
+            try:
+                if read_len != int(fp.headers['Content-Length']):
+                    raise FilesetError('Fileset content length mismatch: {} != {}'.format(read_len, fp.headers['Content-Length']))
+            except ValueError:
+                logger.debug('Skipping Content-Length check, unparsable header')
+        else:
+            logger.debug('Skipping Content-Length check')
 
         self.remote_files = new_remote_files
 
@@ -575,7 +591,9 @@ class TestFileset(unittest.TestCase):
 
         def my_urlopen(uri):
             self.assertEqual(uri, fileset_uri)
-            return StringIO('\n'.join(files + ('',)))
+            fp = StringIO('\n'.join(files + ('',)))
+            msg = httplib.HTTPMessage(fp=StringIO('Content-Length: {}'.format(len(fp.getvalue()))), seekable=True)
+            return urllib.addinfourl(fp, msg, uri)
         urllib2.urlopen = my_urlopen
 
         fs = Fileset(fileset_uri, self.td)

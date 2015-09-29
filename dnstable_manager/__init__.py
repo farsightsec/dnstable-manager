@@ -6,6 +6,7 @@ import httplib
 import logging
 import os
 import shutil
+import socket
 import tempfile
 import threading
 import time
@@ -16,7 +17,7 @@ import urllib2
 import urlparse
 
 from dnstable_manager.download import DownloadManager
-from dnstable_manager.fileset import Fileset
+from dnstable_manager.fileset import Fileset, FilesetError
 import jsonschema
 import option_merge
 import pkg_resources
@@ -108,7 +109,7 @@ class DNSTableManager:
                 if now >= next_remote_load:
                     self.fileset.load_remote_fileset()
                     next_remote_load = now + self.frequency
-            except (urllib2.URLError, urllib2.HTTPError, httplib.HTTPException, socket.error) as e:
+            except (FilesetError, urllib2.URLError, urllib2.HTTPError, httplib.HTTPException, socket.error) as e:
                 logger.error('Failed to load remote fileset {}: {}'.format(self.fileset_uri, str(e)))
                 logger.debug(traceback.format_exc())
                 next_remote_load = now + self.retry_timeout
