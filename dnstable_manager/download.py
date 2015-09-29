@@ -19,6 +19,8 @@ import terminable_thread
 
 logger = logging.getLogger(__name__)
 
+class DownloadError(Exception): pass
+
 class DownloadManager:
     def __init__(self, max_downloads=4, retry_timeout=60):
         self._pending_downloads = set()
@@ -114,6 +116,17 @@ class DownloadManager:
 
             logger.debug('Copying urlopen of {} to {}'.format(f.uri, out.name))
             shutil.copyfileobj(fp, out)
+
+            if 'Content-Length' in fp.headers:
+                try:
+                    expected_len = int(fp.headers['Content-Length'])
+                    if out.tell() != expected_len:
+                        raise DownloadError('Content length mismatch: {} != {}'.format(out.tell(), expected_len))
+                except ValueError:
+                    logger.debug('Skipping content length check, invalid header: {}'.format(fp.headers['Content-Length']))
+            else:
+                logger.debug('Skipping content length check, header missing')
+
             out.file.close()
             os.chmod(out.name, 0o644)
 
