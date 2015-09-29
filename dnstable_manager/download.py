@@ -128,15 +128,11 @@ class DownloadManager:
             out.delete = False
 
             logger.info('Download of {} to {} complete'.format(f.uri, target))
-        except KeyboardInterrupt:
-            logger.debug('Re-Raising KeyboardInterrupt')
-            raise
-        except SystemExit:
-            logger.debug('Re-Raising SystemExit')
+        except (KeyboardInterrupt, SystemExit) as e:
+            logger.debug('Re-Raising {}'.format(str(e)))
             raise
         except Exception as e:
-            logger.error('Download of {} failed'.format(f.uri))
-            logger.info(str(e))
+            logger.error('Download of {} failed: {}'.format(f.uri, str(e)))
             logger.debug(traceback.format_exc())
 
             expire_thread = terminable_thread.Thread(target=self._expire_failed_download, args=(f,))

@@ -108,14 +108,8 @@ class DNSTableManager:
                 if now >= next_remote_load:
                     self.fileset.load_remote_fileset()
                     next_remote_load = now + self.frequency
-            except urllib2.URLError as e:
-                logger.error('Failed to load remote fileset {}'.format(self.fileset_uri))
-                logger.info(str(e))
-                logger.debug(traceback.format_exc())
-                next_remote_load = now + self.retry_timeout
-            except urllib2.HTTPError as e:
-                logger.error('Failed to load remote fileset {}'.format(self.fileset_uri))
-                logger.info(str(e))
+            except (urllib2.URLError, urllib2.HTTPError, httplib.HTTPException) as e:
+                logger.error('Failed to load remote fileset {}: {}'.format(self.fileset_uri, str(e)))
                 logger.debug(traceback.format_exc())
                 next_remote_load = now + self.retry_timeout
 
@@ -128,20 +122,14 @@ class DNSTableManager:
 
             try:
                 self.fileset.write_local_fileset()
-            except IOError as e:
-                logger.error('Failed to write fileset {}'.format(self.fileset.get_fileset_name()))
-                logger.info(str(e))
-                logger.debug(traceback.format_exc())
-            except OSError as e:
-                logger.error('Failed to write fileset {}'.format(self.fileset.get_fileset_name()))
-                logger.info(str(e))
+            except (IOError, OSError) as e:
+                logger.error('Failed to write fileset {}: {}'.format(self.fileset.get_fileset_name(), str(e)))
                 logger.debug(traceback.format_exc())
 
             try:
                 self.fileset.purge_deleted_files()
             except OSError as e:
-                logger.error('Failed to purge deleted files in'.format(self.destination))
-                logger.info(str(e))
+                logger.error('Failed to purge deleted files in {}: {}'.format(self.destination, str(e)))
                 logger.debug(traceback.format_exc())
 
             time.sleep(1)
