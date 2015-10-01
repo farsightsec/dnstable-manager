@@ -8,6 +8,7 @@ import httplib
 import logging
 import os
 import shutil
+import subprocess
 import tempfile
 import time
 import unittest
@@ -20,6 +21,8 @@ disable_unlink = False
 class FilesetError(Exception): pass
 
 class ParseError(FilesetError): pass
+
+class ValidationFailed(FilesetError): pass
 
 def parse_datetime(s):
     """
@@ -253,10 +256,11 @@ class File(object):
 
     _valid_tl = ('Y', 'Q', 'M', 'W', 'D', 'H', 'X', 'm')
 
-    def __init__(self, name, dname=None, uri=None):
+    def __init__(self, name, dname=None, uri=None, validator=None):
         self.name = name
         self.dname = dname
         self.uri = uri
+        self.validator = validator
         self._init_tl()
         self._init_datetime()
 
@@ -291,6 +295,30 @@ class File(object):
 
     def __hash__(self):
         return hash(self.tl) ^ hash(self.datetime) ^ hash(self.name)
+
+    def target(self):
+        if self.dname:
+            return os.path.join(self.dname, self.name)
+        else:
+            return self.name
+
+    def validate(self, filename=None):
+        if filename is None:
+            filename = self.target()
+
+        if self.validator:
+            stdout = tempfile.TemporaryFile()
+            stderr = tempfile.TemporaryFile()
+            try:
+                logger.info('Validating {}'.format(filename))
+                subprocess.check_call([self.validator, filename], stdout=stdout, stderr=stderr)
+                stdout.seek(0)
+                logger.debug('stdout: {}'.format(stdout.read()))
+                stderr.seek(0)
+                logger.debug('stderr: {}'.format(stderr.read()))
+            except subprocess.CalledProcessError:
+                stderr.seek(0)
+                raise ValidationFailed('Validation of {} failed: {}'.format(filename, stderr.read()))
 
 class TestFile(unittest.TestCase):
     def test_init_year(self):
@@ -327,7 +355,7 @@ class TestFile(unittest.TestCase):
         self.assertNotEqual(hash(f1), hash(f3))
 
 class Fileset(object):
-    def __init__(self, uri, dname, base='dns', extension='mtbl'):
+    def __init__(self, uri, dname, base='dns', extension='mtbl', validator=None):
         """
         Create a new Fileset object.
 
@@ -346,6 +374,7 @@ class Fileset(object):
         self.dname = dname
         self.base = base
         self.extension = extension
+        self.validator = validator
 
         self.local_files = None
         self.load_local_fileset()
@@ -357,7 +386,7 @@ class Fileset(object):
         new_local_files = set()
         for fname in glob.glob(g_expr):
             try:
-                new_local_files.add(File(os.path.basename(fname)))
+                new_local_files.add(File(os.path.basename(fname), validator=self.validator))
             except ParseError as e:
                 logger.debug('Error parsing filename \'{}\': {}'.format(fname, str(e)))
         self.local_files = new_local_files
@@ -429,7 +458,7 @@ class Fileset(object):
                 logger.warning('Skipping {}.  Extensions is not {}.'.format(fname, self.extension))
                 continue
 
-            new_remote_files.add(File(fname, dname=self.dname, uri=relative_uri(self.uri, fname)))
+            new_remote_files.add(File(fname, dname=self.dname, uri=relative_uri(self.uri, fname), validator=self.validator))
 
         if 'Content-Length' in fp.headers:
             try:

@@ -100,6 +100,7 @@ def main():
                 base=fileset_config['base'],
                 extension=fileset_config['extension'],
                 frequency=fileset_config['frequency'],
+                validator=fileset_config.get('validator', None),
                 download_manager = download_manager)
         fileset_managers[fileset] = manager
         manager.start()

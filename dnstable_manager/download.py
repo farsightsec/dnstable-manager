@@ -104,10 +104,7 @@ class DownloadManager:
     def _download(self, f):
         logger.debug('Downloading {}'.format(f))
         try:
-            if f.dname:
-                target = os.path.join(f.dname, f.name)
-            else:
-                target = f.name
+            target = f.target()
 
             logger.info('Downloading {} to {}'.format(f.uri, target))
 
@@ -135,6 +132,8 @@ class DownloadManager:
                 mtime = time.mktime(mtime_tz[:-1]) + mtime_tz[-1]
                 logger.debug('Setting mtime of {} to {}'.format(out.name, time.ctime(mtime)))
                 os.utime(out.name, (mtime, mtime))
+
+            f.validate(out.name)
 
             logger.debug('Renaming {} to {}'.format(out.name, target))
             os.rename(out.name, target)

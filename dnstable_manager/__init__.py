@@ -57,7 +57,7 @@ class TestGetConfig(unittest.TestCase):
             get_config()
 
 class DNSTableManager:
-    def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, retry_timeout=60, download_manager=None):
+    def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, retry_timeout=60, validator=None, download_manager=None):
         self.fileset_uri = fileset_uri
 
         if not os.path.isdir(destination):
@@ -74,7 +74,7 @@ class DNSTableManager:
         self.frequency = frequency
         self.retry_timeout = retry_timeout
 
-        self.fileset = Fileset(self.fileset_uri, self.destination, self.base, self.extension)
+        self.fileset = Fileset(self.fileset_uri, self.destination, self.base, self.extension, validator=validator)
 
         if download_manager:
             self.download_manager = download_manager

@@ -80,4 +80,5 @@ sections:
 	    base: REQUIRED, prefix of fileset name (e.g. dns, dnssec, dns--com)
 	    extension: REQUIRED, suffix of files in set (e.g. mtbl)
             frequency: REQUIRED, how often to download the fileset
+            validator: validation command (filename is passed as argv[1])
 ```
