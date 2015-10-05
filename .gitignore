@@ -1,6 +1,7 @@
 *.pyc
 *.egg-info
 /build
+/dist
 /.coverage
 /coverage
 debian/*.log

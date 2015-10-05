@@ -1,0 +1,5 @@
+include *.md
+include COPYRIGHT
+include example-config.yaml
+recursive-include debian *
+recursive-include sv *
