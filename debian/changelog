@@ -1,3 +1,10 @@
+dnstable-manager (0.4) debian-farsightsec; urgency=medium
+
+  * fileset: add optional validator
+  * Add MANIFEST.in
+
+ -- Henry Stern <stern@fsi.io>  Mon, 05 Oct 2015 16:29:49 -0300
+
 dnstable-manager (0.3) debian-farsightsec; urgency=medium
 
   * dnstable_manager: clean up exception handlers, handle httplib.HTTPException
