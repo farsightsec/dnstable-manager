@@ -3,6 +3,7 @@
 import argparse
 import logging
 import logging.handlers
+import signal
 import sys
 import time
 import urllib2
@@ -18,7 +19,12 @@ import dnstable_manager.rsync
 # module has been loaded
 time.strptime('','')
 
+def exit_handler(signum, frame):
+    sys.exit(signum)
+
 def main():
+    signal.signal(signal.SIGTERM, exit_handler)
+
     parser = argparse.ArgumentParser(
             description='Maintains local copies of remote filesets.  Supports http, https, ftp, file, rsync, rsync+rsh uri schemas.')
     parser.add_argument('--config', help='Path to configuration file.')
