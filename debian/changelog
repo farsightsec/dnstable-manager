@@ -1,3 +1,9 @@
+dnstable-manager (0.5) debian-farsightsec; urgency=medium
+
+  * dnstable-manager: handle SIGTERM with sys.exit
+
+ -- Henry Stern <stern@fsi.io>  Fri, 30 Oct 2015 14:15:06 -0300
+
 dnstable-manager (0.4) debian-farsightsec; urgency=medium
 
   * fileset: add optional validator
