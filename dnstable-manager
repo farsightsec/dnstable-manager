@@ -27,7 +27,8 @@ def main():
 
     parser = argparse.ArgumentParser(
             description='Maintains local copies of remote filesets.  Supports http, https, ftp, file, rsync, rsync+rsh uri schemas.')
-    parser.add_argument('--config', help='Path to configuration file.')
+    parser.add_argument('--config', required=True,
+            help='Path to configuration file.')
     parser.add_argument('--verbosity', '-v', action='count', 
             help='Verbosity level.  Repeat to increase.')
     parser.add_argument('--disable-unlink', action='store_true',
