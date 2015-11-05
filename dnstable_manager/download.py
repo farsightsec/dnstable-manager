@@ -109,7 +109,7 @@ class DownloadManager:
             logger.info('Downloading {} to {}'.format(f.uri, target))
 
             fp = urllib2.urlopen(f.uri)
-            out = tempfile.NamedTemporaryFile(prefix='.{}.'.format(f.name), dir=f.dname)
+            out = tempfile.NamedTemporaryFile(prefix='.{}.'.format(f.name), dir=f.dname, delete=True)
 
             logger.debug('Copying urlopen of {} to {}'.format(f.uri, out.name))
             shutil.copyfileobj(fp, out)
@@ -192,7 +192,7 @@ class TestDownloadManager(unittest.TestCase):
         urllib2.urlopen = self.orig_urlopen
 
     def test_download(self):
-        tf = tempfile.NamedTemporaryFile(prefix='dns-test-dnstable-manager_download-', suffix='.2015.Y.mtbl')
+        tf = tempfile.NamedTemporaryFile(prefix='dns-test-dnstable-manager_download-', suffix='.2015.Y.mtbl', delete=True)
         test_data = 'abc\n123\n'
         f = File(os.path.basename(tf.name), dname=os.path.dirname(tf.name))
         f.uri = 'http://example.com/{}'.format(f.name)
