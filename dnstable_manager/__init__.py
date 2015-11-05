@@ -49,6 +49,14 @@ def get_config(filename=None, stream=None, validate=True):
                 raise ConfigException('Fileset {} collides with {}/{}.*'.format(fileset, *t))
             filesets.add(t)
 
+        for attr in ('ssl_ca_file', 'ssl_keyfile', 'ssl_certfile'):
+            if attr in config['downloader']:
+                try:
+                    open(config['downloader'][attr])
+                except IOError as e:
+                    raise ConfigException('{attr} {filename}: {strerror}'.format(
+                        attr=attr, filename=e.filename, strerror=e.strerror))
+
     return config
 
 class TestGetConfig(unittest.TestCase):
