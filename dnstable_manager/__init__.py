@@ -49,6 +49,9 @@ def get_config(filename=None, stream=None, validate=True):
                 raise ConfigException('Fileset {} collides with {}/{}.*'.format(fileset, *t))
             filesets.add(t)
 
+            if not os.path.isdir(fileset_config['destination']):
+                raise ConfigException('{} is not a directory'.format(fileset_config['destination']))
+
         for attr in ('ssl_ca_file', 'ssl_keyfile', 'ssl_certfile'):
             if attr in config['downloader']:
                 try:
