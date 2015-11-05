@@ -1,7 +1,16 @@
 import urllib2
 import httplib
-import ssl
+import logging
 import socket
+
+logger = logging.getLogger(__name__)
+
+try:
+    import ssl
+    ssl.CertificateError
+except AttributeError:
+    logger.debug('Using backported ssl.py')
+    import backports.ssl as ssl
 
 ca_file = '/etc/ssl/certs/ca-certificates.crt'
 keyfile = None
