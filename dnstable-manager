@@ -56,11 +56,11 @@ def main():
     else:
         formatter = logging.Formatter('%(asctime)s %(name)s: %(message)s')
 
-    if 'log_stream' in config['manager']:
+    if 'log_stream' in config['manager'] or 'log_file' not in config['manager']:
         handler = logging.StreamHandler(stream={
             'stderr' : sys.stderr,
             'stdout' : sys.stdout,
-            }.get(config['manager']['log_stream'], 'stderr'))
+            }.get(config['manager'].get('log_stream', 'stderr')))
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
