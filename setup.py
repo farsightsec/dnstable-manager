@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'dnstable-manager',
-    version = '0.5',
+    version = '0.6',
     packages = find_packages(),
 
     scripts = ['dnstable-manager'],

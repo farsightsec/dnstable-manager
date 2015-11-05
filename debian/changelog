@@ -1,3 +1,10 @@
+dnstable-manager (0.6) debian-farsightsec; urgency=medium
+
+  * control: depend on jsonschema 2.3.0
+  * dnstable-manager: make config a required argument
+
+ -- Henry Stern <stern@fsi.io>  Thu, 05 Nov 2015 07:55:27 -0400
+
 dnstable-manager (0.5) debian-farsightsec; urgency=medium
 
   * dnstable-manager: handle SIGTERM with sys.exit
