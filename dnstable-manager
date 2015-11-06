@@ -114,10 +114,7 @@ def main():
 
     download_manager.start()
 
-    for manager in fileset_managers.values():
-        manager.join()
-
-    download_manager.join()
+    signal.pause()
 
 if __name__ == '__main__':
     main()
