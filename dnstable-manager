@@ -20,6 +20,8 @@ import dnstable_manager.rsync
 time.strptime('','')
 
 def exit_handler(signum, frame):
+    logger = logging.getLogger('dnstable_manager')
+    logger.debug('Terminating with signal {}'.format(signum))
     sys.exit(signum)
 
 def main():
