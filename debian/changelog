@@ -1,3 +1,18 @@
+dnstable-manager (0.7) debian-farsightsec; urgency=medium
+
+  * control: add pyflakes to build-dep
+  * https: include backported ssl from 2.7.5 for older pythons
+  * dnstable_manager: check if ssl cert and key files are readable
+  * dnstable_manager: ensure that destination directories exist
+  * dnstable-manager: default logging to stderr
+  * download: add delete=True to NamedTemporaryFiles
+  * dnstable-manager: replace joins with signal.pause
+  * Make threads no longer daemonic
+  * dnstable-manager: add termination log message
+  * setup.py: depend on jsonschema >= 2.3.0
+
+ -- Henry Stern <stern@fsi.io>  Fri, 06 Nov 2015 08:47:47 -0400
+
 dnstable-manager (0.6) debian-farsightsec; urgency=medium
 
   * control: depend on jsonschema 2.3.0
