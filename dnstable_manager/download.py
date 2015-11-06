@@ -44,7 +44,7 @@ class DownloadManager:
         self._terminate.clear()
 
         self._main_thread = threading.Thread(target=self._run)
-        self._main_thread.setDaemon(False)
+        self._main_thread.setDaemon(True)
         self._main_thread.start()
 
     def stop(self, blocking=False, timeout=None):
@@ -80,7 +80,7 @@ class DownloadManager:
                     self._pending_downloads.remove(f)
 
                     thread = terminable_thread.Thread(target=self._download, args=(f,))
-                    thread.setDaemon(False)
+                    thread.setDaemon(True)
                     thread.start()
 
                     self._active_downloads[f] = thread
@@ -148,7 +148,7 @@ class DownloadManager:
             logger.debug(traceback.format_exc())
 
             expire_thread = terminable_thread.Thread(target=self._expire_failed_download, args=(f,))
-            expire_thread.setDaemon(False)
+            expire_thread.setDaemon(True)
             expire_thread.start()
             with self._lock:
                 self._failed_downloads[f] = expire_thread

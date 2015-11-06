@@ -100,7 +100,7 @@ class DNSTableManager:
             raise Exception
 
         self.thread = threading.Thread(target=self.run)
-        self.thread.setDaemon(False)
+        self.thread.setDaemon(True)
         self.thread.start()
 
     def join(self):
