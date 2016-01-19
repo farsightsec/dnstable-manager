@@ -355,7 +355,7 @@ class TestFile(unittest.TestCase):
         self.assertNotEqual(hash(f1), hash(f3))
 
 class Fileset(object):
-    def __init__(self, uri, dname, base='dns', extension='mtbl', validator=None):
+    def __init__(self, uri, dname, base='dns', extension='mtbl', validator=None, timeout=None):
         """
         Create a new Fileset object.
 
@@ -375,6 +375,7 @@ class Fileset(object):
         self.base = base
         self.extension = extension
         self.validator = validator
+        self.timeout = timeout
 
         self.local_files = None
         self.load_local_fileset()
@@ -441,7 +442,7 @@ class Fileset(object):
 
     def load_remote_fileset(self):
         logger.info('Retrieving {}'.format(self.uri))
-        fp = urllib2.urlopen(self.uri)
+        fp = urllib2.urlopen(self.uri, timeout=self.timeout)
         new_remote_files = set()
         read_len = 0
         for fname in fp:
@@ -624,7 +625,7 @@ class TestFileset(unittest.TestCase):
             'dns.20150209.0110.m.mtbl'
             )
 
-        def my_urlopen(uri):
+        def my_urlopen(uri, timeout=None):
             self.assertEqual(uri, fileset_uri)
             fp = StringIO('\n'.join(files + ('',)))
             msg = httplib.HTTPMessage(fp=StringIO('Content-Length: {}'.format(len(fp.getvalue()))), seekable=True)

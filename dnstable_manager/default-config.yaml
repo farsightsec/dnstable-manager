@@ -4,6 +4,7 @@ manager:
         syslog_facility: USER
 downloader:
         max_downloads: 4
+        download_timeout: 60
         retry_timeout: 60
         tempdir: /tmp
         rsync_rsh: ssh

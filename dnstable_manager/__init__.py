@@ -68,7 +68,7 @@ class TestGetConfig(unittest.TestCase):
             get_config()
 
 class DNSTableManager:
-    def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, retry_timeout=60, validator=None, download_manager=None):
+    def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, download_timeout=None, retry_timeout=60, validator=None, download_manager=None):
         self.fileset_uri = fileset_uri
 
         if not os.path.isdir(destination):
@@ -83,14 +83,20 @@ class DNSTableManager:
 
         self.extension = extension
         self.frequency = frequency
+        self.download_timeout = download_timeout
         self.retry_timeout = retry_timeout
 
-        self.fileset = Fileset(self.fileset_uri, self.destination, self.base, self.extension, validator=validator)
+        self.fileset = Fileset(uri=self.fileset_uri,
+                dname=self.destination,
+                base=self.base,
+                extension=self.extension,
+                validator=validator,
+                timeout=download_timeout)
 
         if download_manager:
             self.download_manager = download_manager
         else:
-            self.download_manager = DownloadManager(retry_timeout=retry_timeout)
+            self.download_manager = DownloadManager(download_timeout=download_timeout, retry_timeout=retry_timeout)
             self.download_manager.start()
 
         self.thread = None
@@ -171,7 +177,7 @@ class TestDNSTableManager(unittest.TestCase):
             'dns.20150209.0110.m.mtbl'
             )
 
-        def my_urlopen(uri):
+        def my_urlopen(uri, timeout=None):
             msg = httplib.HTTPMessage(StringIO())
             if uri == fileset_uri:
                 return urllib.addinfourl(StringIO('\n'.join(fileset + ('',))),

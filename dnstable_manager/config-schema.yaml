@@ -66,6 +66,10 @@ properties:
                         max_downloads:
                                 type: integer
                                 minimum: 1
+                        download_timeout:
+                                type: number
+                                minimum: 0
+                                exclusiveMinimum: false
                         retry_timeout:
                                 type: number
                                 minimum: 0

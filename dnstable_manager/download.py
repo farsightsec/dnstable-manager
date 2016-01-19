@@ -22,13 +22,14 @@ logger = logging.getLogger(__name__)
 class DownloadError(Exception): pass
 
 class DownloadManager:
-    def __init__(self, max_downloads=4, retry_timeout=60):
+    def __init__(self, max_downloads=4, download_timeout=None, retry_timeout=60):
         self._pending_downloads = set()
         self._active_downloads = dict()
 
         self._failed_downloads = dict()
 
         self._max_downloads = max_downloads
+        self._download_timeout = download_timeout
         self._retry_timeout = retry_timeout
         self._lock = threading.RLock()
         
@@ -93,11 +94,13 @@ class DownloadManager:
         logger.debug('Completing DownloadManager run {}'.format(self))
         with self._lock:
             for f,thread in self._active_downloads.items():
-                thread.terminate()
+                if thread.isAlive():
+                    thread.terminate()
                 thread.join()
                 del self._active_downloads[f]
             for f,thread in self._failed_downloads.items():
-                thread.terminate()
+                if thread.isAlive():
+                    thread.terminate()
                 thread.join()
                 del self._failed_downloads[f]
         
@@ -108,7 +111,7 @@ class DownloadManager:
 
             logger.info('Downloading {} to {}'.format(f.uri, target))
 
-            fp = urllib2.urlopen(f.uri)
+            fp = urllib2.urlopen(f.uri, timeout=self._download_timeout)
             out = tempfile.NamedTemporaryFile(prefix='.{}.'.format(f.name), dir=f.dname, delete=True)
 
             logger.debug('Copying urlopen of {} to {}'.format(f.uri, out.name))
@@ -196,7 +199,7 @@ class TestDownloadManager(unittest.TestCase):
         test_data = 'abc\n123\n'
         f = File(os.path.basename(tf.name), dname=os.path.dirname(tf.name))
         f.uri = 'http://example.com/{}'.format(f.name)
-        def my_urlopen(uri):
+        def my_urlopen(uri, timeout=None):
             self.assertEquals(uri, f.uri)
             return urllib.addinfourl(StringIO(test_data), httplib.HTTPMessage(StringIO()), f.uri)
         urllib2.urlopen = my_urlopen
