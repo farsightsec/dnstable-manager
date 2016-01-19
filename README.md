@@ -63,6 +63,7 @@ sections:
         log_level: one of 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'
     downloader:
         max_downloads: integer, at least 3 recommended
+        download_timeout: time in seconds
         retry_timeout: time in seconds
         tempdir: directory on filesystem with enough space, needed for rsync
         rsync_rsh: command line for RSYNC_RSH variable
