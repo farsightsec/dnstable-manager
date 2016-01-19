@@ -1,3 +1,9 @@
+dnstable-manager (0.8.0) debian-farsightsec; urgency=medium
+
+  * Implement download timeouts
+
+ -- Henry Stern <stern@fsi.io>  Tue, 19 Jan 2016 15:03:00 -0400
+
 dnstable-manager (0.7) debian-farsightsec; urgency=medium
 
   * control: add pyflakes to build-dep
