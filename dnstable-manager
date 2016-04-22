@@ -125,6 +125,7 @@ def main():
                 extension=fileset_config['extension'],
                 frequency=fileset_config['frequency'],
                 validator=fileset_config.get('validator', None),
+                minimal=fileset_config.get('minimal', True),
                 download_timeout=config['downloader'].get('download_timeout', None),
                 download_manager = download_manager)
         fileset_managers[fileset] = manager

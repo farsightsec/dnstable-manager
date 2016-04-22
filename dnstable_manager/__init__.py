@@ -82,7 +82,7 @@ class TestGetConfig(unittest.TestCase):
             get_config()
 
 class DNSTableManager:
-    def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, download_timeout=None, retry_timeout=60, validator=None, download_manager=None):
+    def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, download_timeout=None, retry_timeout=60, validator=None, minimal=True, download_manager=None):
         self.fileset_uri = fileset_uri
 
         if not os.path.isdir(destination):
@@ -99,6 +99,7 @@ class DNSTableManager:
         self.frequency = frequency
         self.download_timeout = download_timeout
         self.retry_timeout = retry_timeout
+        self.minimal = minimal
 
         self.fileset = Fileset(uri=self.fileset_uri,
                 dname=self.destination,
@@ -149,11 +150,13 @@ class DNSTableManager:
                 if f not in self.download_manager:
                     self.download_manager.enqueue(f)
 
-            self.fileset.prune_obsolete_files()
-            self.fileset.prune_redundant_files()
+            self.fileset.prune_obsolete_files(minimal=self.minimal)
+            self.fileset.prune_redundant_files(minimal=self.minimal)
 
             try:
                 self.fileset.write_local_fileset()
+                if not self.minimal:
+                    self.fileset.write_local_fileset(minimal=False)
             except (IOError, OSError) as e:
                 logger.error('Failed to write fileset {}: {}'.format(self.fileset.get_fileset_name(), str(e)))
                 logger.debug(traceback.format_exc())
