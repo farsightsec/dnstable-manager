@@ -25,7 +25,6 @@ import subprocess
 import tempfile
 import urllib
 import urllib2
-import unittest
 
 logger = logging.getLogger(__name__)
 
@@ -115,43 +114,3 @@ def install(*args, **kwargs):
     urllib2.install_opener(opener)
 
 install()
-
-# TODO test attributes, validity of arguments?
-class TestRsyncHandler(unittest.TestCase):
-    file_data = 'test\ndata\n'
-    fail_url = 'rsync://fail-url'
-
-    def setUp(self):
-        self.orig_check_call = subprocess.check_call
-        subprocess.check_call = self.fake_check_call
-
-    def tearDown(self):
-        subprocess.check_call = self.orig_check_call
-
-    def fake_check_call(self, argv, **kwargs):
-        if argv[-2] == TestRsyncHandler.fail_url:
-            raise urllib2.URLError('fail url')
-        if not os.path.exists(argv[-1]):
-            open(argv[-1], 'w').write(TestRsyncHandler.file_data)
-
-    def test_urlopen(self):
-        fp = urllib2.urlopen('rsync://localhost/test.txt')
-        self.assertEqual(fp.read(), TestRsyncHandler.file_data)
-
-    def test_urlopen_user(self):
-        fp = urllib2.urlopen('rsync://foo@localhost/test.txt')
-        self.assertEqual(fp.read(), TestRsyncHandler.file_data)
-
-    def test_urlopen_fails(self):
-        with self.assertRaises(urllib2.URLError):
-            urllib2.urlopen(TestRsyncHandler.fail_url)
-
-    def test_rsh(self):
-        fp = urllib2.urlopen('rsync+rsh://foo@localhost/test.txt')
-        self.assertEqual(fp.read(), TestRsyncHandler.file_data)
-
-    def test_cookiemonster(self):
-        handler = RsyncHandler()
-        attrs = ['a=b']
-        handler.do_rsync('rsync://localhost/test.txt', attrs=attrs)
-        self.assertItemsEqual(attrs, ['a=b'])

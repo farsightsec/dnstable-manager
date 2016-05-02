@@ -14,9 +14,7 @@
 
 from __future__ import print_function
 
-from cStringIO import StringIO
 import heapq
-import httplib
 import logging
 import os
 import shutil
@@ -24,11 +22,8 @@ import tempfile
 import time
 import threading
 import traceback
-import unittest
-import urllib
 import urllib2
 
-from dnstable_manager.fileset import File
 import terminable_thread
 
 logger = logging.getLogger(__name__)
@@ -198,29 +193,3 @@ class DownloadManager:
             logger.debug('Notifying run loop')
             self._action_required.notify()
 
-class TestDownloadManager(unittest.TestCase):
-    @staticmethod
-    def noop(self, *args, **kwargs): pass
-
-    def setUp(self):
-        self.orig_urlopen = urllib2.urlopen
-
-    def tearDown(self):
-        urllib2.urlopen = self.orig_urlopen
-
-    def test_download(self):
-        tf = tempfile.NamedTemporaryFile(prefix='dns-test-dnstable-manager_download-', suffix='.2015.Y.mtbl', delete=True)
-        test_data = 'abc\n123\n'
-        f = File(os.path.basename(tf.name), dname=os.path.dirname(tf.name))
-        f.uri = 'http://example.com/{}'.format(f.name)
-        def my_urlopen(uri, timeout=None):
-            self.assertEquals(uri, f.uri)
-            return urllib.addinfourl(StringIO(test_data), httplib.HTTPMessage(StringIO()), f.uri)
-        urllib2.urlopen = my_urlopen
-
-        m = DownloadManager()
-        try:
-            m._download(f)
-            self.assertEquals(open(tf.name).read(), test_data)
-        finally:
-            m.stop()
