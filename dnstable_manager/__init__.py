@@ -14,19 +14,14 @@
 
 from __future__ import print_function
 
-from cStringIO import StringIO
 import errno
 import httplib
 import logging
 import os
-import shutil
 import socket
-import tempfile
 import threading
 import time
 import traceback
-import unittest
-import urllib
 import urllib2
 import urlparse
 
@@ -75,11 +70,6 @@ def get_config(filename=None, stream=None, validate=True):
                         attr=attr, filename=e.filename, strerror=e.strerror))
 
     return config
-
-class TestGetConfig(unittest.TestCase):
-    def test_get_config_default(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            get_config()
 
 class DNSTableManager:
     def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, download_timeout=None, retry_timeout=60, validator=None, minimal=True, download_manager=None):
@@ -169,60 +159,3 @@ class DNSTableManager:
 
             time.sleep(1)
 
-class TestDNSTableManager(unittest.TestCase):
-    @staticmethod
-    def noop(self, *args, **kwargs): pass
-
-    def setUp(self):
-        self.orig_urlopen = urllib2.urlopen
-        self.orig_sleep = time.sleep
-
-    def tearDown(self):
-        urllib2.urlopen = self.orig_urlopen
-        time.sleep = self.orig_sleep
-
-    def test_run(self):
-        uri_base = 'http://example.com'
-        fileset_uri = '{}/dns.fileset'.format(uri_base)
-        fileset = (
-            'dns.2014.Y.mtbl',
-            'dns.201501.M.mtbl',
-            'dns.20150201.W.mtbl',
-            'dns.20150208.D.mtbl',
-            'dns.20150209.0000.H.mtbl',
-            'dns.20150209.0100.X.mtbl',
-            'dns.20150209.0110.m.mtbl'
-            )
-
-        def my_urlopen(uri, timeout=None):
-            msg = httplib.HTTPMessage(StringIO())
-            if uri == fileset_uri:
-                return urllib.addinfourl(StringIO('\n'.join(fileset + ('',))),
-                        msg, uri)
-            else:
-                self.assertTrue(uri.startswith('{}/'.format(uri_base)))
-                return urllib.addinfourl(StringIO('{}'.format(uri[1+len(uri_base):])),
-                        msg, uri)
-        urllib2.urlopen = my_urlopen
-
-        class Success(Exception): pass
-        def my_sleep(timeout):
-            self.orig_sleep(0.01)
-            time.sleep = my_sleep_done
-        def my_sleep_done(timeout):
-            self.orig_sleep(0.01)
-            raise Success
-        time.sleep = my_sleep
-
-        td = tempfile.mkdtemp(prefix='test-dnstable-manager-run.')
-        try:
-            d = DownloadManager()
-            d.start()
-            m = DNSTableManager(fileset_uri, td, download_manager=d)
-            self.assertRaises(Success, m.run)
-            self.orig_sleep(0.1)
-            for fn in fileset:
-                self.assertEqual(open(os.path.join(td, fn)).read(), fn)
-            d.stop(blocking=True)
-        finally:
-            shutil.rmtree(td, ignore_errors=True)

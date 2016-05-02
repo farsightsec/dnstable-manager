@@ -19,7 +19,10 @@ setup(
         'dnstable_manager': ['*.yaml'],
     },
 
-    test_suite='dnstable_manager',
+    test_suite='tests',
+    tests_require = [
+        'pyflakes',
+        ],
 
     author = 'Farsight Security Inc.',
     author_email = 'software@fsi.io',
