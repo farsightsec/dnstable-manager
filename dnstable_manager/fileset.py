@@ -391,9 +391,10 @@ class Fileset(object):
         self.validator = validator
         self.timeout = timeout
 
-        self.local_files = None
+        self.all_local_files = None
+        self.minimal_local_files = None
         self.load_local_fileset()
-        self.remote_files = set(self.local_files)
+        self.remote_files = set(self.all_local_files)
         self.pending_deletions = set()
 
     def load_local_fileset(self):
@@ -404,22 +405,32 @@ class Fileset(object):
                 new_local_files.add(File(os.path.basename(fname), validator=self.validator))
             except ParseError as e:
                 logger.debug('Error parsing filename \'{}\': {}'.format(fname, str(e)))
-        self.local_files = new_local_files
+        self.all_local_files = set(new_local_files)
+        self.minimal_local_files = set(new_local_files)
 
-    def prune_obsolete_files(self):
-        self.pending_deletions.update(self.local_files.difference(self.remote_files).difference(compute_overlap(self.local_files.union(self.remote_files))))
-        self.local_files.difference_update(self.pending_deletions)
+    def prune_obsolete_files(self, minimal=True):
+        obsolete_files = self.minimal_local_files.difference(self.remote_files).difference(compute_overlap(self.minimal_local_files.union(self.remote_files)))
 
-    def prune_redundant_files(self):
-        self.pending_deletions.update(compute_overlap(self.local_files))
-        self.local_files.difference_update(self.pending_deletions)
+        if not minimal:
+            obsolete_files.update(set(compute_overlap(self.minimal_local_files)).difference(compute_overlap(self.remote_files)))
 
-    def get_fileset_name(self):
+        self.all_local_files.difference_update(obsolete_files)
+        self.minimal_local_files.difference_update(obsolete_files)
+        self.pending_deletions.update(obsolete_files)
+
+    def prune_redundant_files(self, minimal=True):
+        redundant_files = set(compute_overlap(self.minimal_local_files))
+        self.minimal_local_files.difference_update(redundant_files)
+        if minimal:
+            self.all_local_files.difference_update(redundant_files)
+            self.pending_deletions.update(redundant_files)
+
+    def get_fileset_name(self, minimal=True):
+        if not minimal:
+            return os.path.join(self.dname, self.base + '-full.fileset')
         return os.path.join(self.dname, self.base + '.fileset')
 
-    def write_local_fileset(self):
-        fileset_fname = self.get_fileset_name()
-        
+    def _write_fileset(self, fileset, fileset_fname):
         # Read the old fileset, if it exists.
         try:
             old_fileset = set(line.rstrip() for line in open(fileset_fname))
@@ -430,15 +441,23 @@ class Fileset(object):
             else:
                 raise
 
-        if old_fileset.symmetric_difference(f.name for f in self.local_files) or not os.path.exists(fileset_fname):
+        if old_fileset.symmetric_difference(f.name for f in fileset) or not os.path.exists(fileset_fname):
             logger.debug('Fileset {} has changed'.format(fileset_fname))
             with tempfile.NamedTemporaryFile(prefix='.{}.'.format(os.path.basename(fileset_fname)), dir=os.path.dirname(fileset_fname), delete=True) as out:
-                for f in sorted(self.local_files):
+                for f in sorted(fileset):
                     print (f.name, file=out)
                 out.file.close()
                 os.chmod(out.name, 0o644)
                 os.rename(out.name, fileset_fname)
                 out.delete = False
+
+    def write_local_fileset(self, minimal=True):
+        if not minimal:
+            fileset = self.all_local_files
+        else:
+            fileset = self.minimal_local_files
+
+        self._write_fileset(fileset, self.get_fileset_name(minimal=minimal))
 
     def purge_deleted_files(self):
         for f in sorted(self.pending_deletions):
@@ -487,7 +506,7 @@ class Fileset(object):
         self.remote_files = new_remote_files
 
     def missing_files(self):
-        return self.remote_files.difference(self.local_files)
+        return self.remote_files.difference(self.all_local_files)
 
 class TestFileset(unittest.TestCase):
     @staticmethod
@@ -520,7 +539,8 @@ class TestFileset(unittest.TestCase):
         fs = Fileset(None, self.td)
         fs.load_local_fileset()
 
-        self.assertItemsEqual(fs.local_files, (File(fn) for fn in fileset))
+        self.assertItemsEqual(fs.all_local_files, (File(fn) for fn in fileset))
+        self.assertItemsEqual(fs.minimal_local_files, (File(fn) for fn in fileset))
 
     def test_prune_obsolete_files(self):
         files = set(File(f) for f in (
@@ -542,12 +562,62 @@ class TestFileset(unittest.TestCase):
             ))
 
         fs = Fileset(None, self.td)
-        fs.local_files = files.union(obsolete)
+        fs.all_local_files = files.union(obsolete)
+        fs.minimal_local_files = files.union(obsolete)
         fs.remote_files = files
         fs.prune_obsolete_files()
 
-        self.assertItemsEqual(fs.local_files, files)
+        self.assertItemsEqual(fs.all_local_files, files)
+        self.assertItemsEqual(fs.minimal_local_files, files)
         self.assertItemsEqual(fs.remote_files, files)
+        self.assertItemsEqual(fs.pending_deletions, obsolete)
+
+    def test_prune_obsolete_files_full(self):
+        remote_files = set(File(f) for f in (
+            'dns.2014.Y.mtbl',
+            'dns.201401.M.mtbl',
+            'dns.20140201.D.mtbl',
+            'dns.20140201.0000.H.mtbl',
+            'dns.20140201.0100.X.mtbl',
+            'dns.20140201.0110.m.mtbl',
+            'dns.2015.Y.mtbl',
+            ))
+        files = set(File(f) for f in (
+            'dns.2014.Y.mtbl',
+            'dns.201401.M.mtbl',
+            'dns.20140201.D.mtbl',
+            'dns.20140201.0000.H.mtbl',
+            'dns.20140201.0100.X.mtbl',
+            'dns.20140201.0110.m.mtbl',
+            'dns.201501.M.mtbl',
+            'dns.20150201.W.mtbl',
+            'dns.20150208.D.mtbl',
+            'dns.20150209.0000.H.mtbl',
+            'dns.20150209.0100.X.mtbl',
+            'dns.20150209.0110.m.mtbl',
+            ))
+        obsolete = set(File(f) for f in (
+            'dns.2012.Y.mtbl',
+            'dns.20130108.W.mtbl',
+            'dns.20130202.D.mtbl',
+            'dns.20130208.0100.H.mtbl',
+            'dns.20130209.0020.X.mtbl',
+            'dns.20130209.0109.m.mtbl',
+            'dns.20150101.D.mtbl',
+            'dns.20150101.0000.H.mtbl',
+            'dns.20150101.0100.X.mtbl',
+            'dns.20150101.0110.m.mtbl',
+            ))
+
+        fs = Fileset(None, self.td)
+        fs.all_local_files = files.union(obsolete)
+        fs.minimal_local_files = files.union(obsolete)
+        fs.remote_files = remote_files
+        fs.prune_obsolete_files(minimal=False)
+
+        self.assertItemsEqual(fs.all_local_files, files)
+        self.assertItemsEqual(fs.minimal_local_files, files)
+        self.assertItemsEqual(fs.remote_files, remote_files)
         self.assertItemsEqual(fs.pending_deletions, obsolete)
 
     def test_prune_redundant_files(self):
@@ -570,11 +640,39 @@ class TestFileset(unittest.TestCase):
             ))
 
         fs = Fileset(None, self.td)
-        fs.local_files = files.union(redundant)
+        fs.minimal_local_files = files.union(redundant)
         fs.prune_redundant_files()
 
-        self.assertItemsEqual(fs.local_files, files)
+        self.assertItemsEqual(fs.minimal_local_files, files)
         self.assertItemsEqual(fs.pending_deletions, redundant)
+
+    def test_prune_redundant_files_full(self):
+        files = set(File(f) for f in (
+            'dns.2014.Y.mtbl',
+            'dns.201501.M.mtbl',
+            'dns.20150201.W.mtbl',
+            'dns.20150208.D.mtbl',
+            'dns.20150209.0000.H.mtbl',
+            'dns.20150209.0100.X.mtbl',
+            'dns.20150209.0110.m.mtbl'
+            ))
+        redundant = set(File(f) for f in (
+            'dns.201401.M.mtbl',
+            'dns.20150108.W.mtbl',
+            'dns.20150202.D.mtbl',
+            'dns.20150208.0100.H.mtbl',
+            'dns.20150209.0020.X.mtbl',
+            'dns.20150209.0109.m.mtbl'
+            ))
+
+        fs = Fileset(None, self.td)
+        fs.all_local_files = files.union(redundant)
+        fs.minimal_local_files = files.union(redundant)
+        fs.prune_redundant_files(minimal=False)
+
+        self.assertItemsEqual(fs.all_local_files, files.union(redundant))
+        self.assertItemsEqual(fs.minimal_local_files, files)
+        self.assertItemsEqual(fs.pending_deletions, [])
 
     def test_write_local_fileset(self):
         files = set(File(f) for f in (
@@ -596,11 +694,54 @@ class TestFileset(unittest.TestCase):
             ))
 
         fs = Fileset(None, self.td)
-        fs.local_files = files.union(redundant)
-        fs.prune_redundant_files()
+        fs.all_local_files = files.union(redundant)
+        fs.minimal_local_files = files
+        fs.write_local_fileset()
 
-        self.assertItemsEqual(fs.local_files, files)
-        self.assertItemsEqual(fs.pending_deletions, redundant)
+        fileset_path = os.path.join(self.td, 'dns.fileset')
+        full_fileset_path = os.path.join(self.td, 'dns-full.fileset')
+
+        self.assertTrue(os.path.exists(fileset_path))
+        self.assertFalse(os.path.exists(full_fileset_path))
+
+        fileset = set(File(f.strip()) for f in open(fileset_path))
+
+        self.assertItemsEqual(files, fileset)
+
+    def test_write_local_fileset_full(self):
+        files = set(File(f) for f in (
+            'dns.2014.Y.mtbl',
+            'dns.201501.M.mtbl',
+            'dns.20150201.W.mtbl',
+            'dns.20150208.D.mtbl',
+            'dns.20150209.0000.H.mtbl',
+            'dns.20150209.0100.X.mtbl',
+            'dns.20150209.0110.m.mtbl'
+            ))
+        redundant = set(File(f) for f in (
+            'dns.201401.M.mtbl',
+            'dns.20150108.W.mtbl',
+            'dns.20150202.D.mtbl',
+            'dns.20150208.0100.H.mtbl',
+            'dns.20150209.0020.X.mtbl',
+            'dns.20150209.0109.m.mtbl'
+            ))
+
+        fs = Fileset(None, self.td)
+        fs.all_local_files = files.union(redundant)
+        fs.minimal_local_files = files
+
+        fs.write_local_fileset(minimal=False)
+
+        fileset_path = os.path.join(self.td, 'dns.fileset')
+        full_fileset_path = os.path.join(self.td, 'dns-full.fileset')
+
+        self.assertFalse(os.path.exists(fileset_path))
+        self.assertTrue(os.path.exists(full_fileset_path))
+
+        fileset = set(File(f.strip()) for f in open(full_fileset_path))
+
+        self.assertItemsEqual(files.union(redundant), fileset)
 
     def test_purge_deleted_files(self):
         files = set(File(f) for f in (
@@ -671,7 +812,8 @@ class TestFileset(unittest.TestCase):
             ))
 
         fs = Fileset(None, self.td)
-        fs.local_files = set(files)
+        fs.all_local_files = set(files)
+        fs.minimal_local_files = set(files)
         fs.remote_files = files.union(missing)
 
         self.assertItemsEqual(fs.missing_files(), missing)

@@ -123,6 +123,8 @@ properties:
                                                 exclusiveMinimum: true
                                         validator:
                                                 type: string
+                                        minimal:
+                                                type: boolean
                                 required:
                                         - uri
                                         - destination
