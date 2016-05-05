@@ -1,3 +1,17 @@
+dnstable-manager (0.9.0) debian-farsightsec; urgency=medium
+
+  * README: add missing docs for download_timeout
+  * Add LICENSE file
+  * Add copyright header to all .py files
+  * Add COPYRIGHT file for backported python ssl module
+  * Add minimal/full distinction to filesets
+  * Re-organize tests into own module.
+  * fileset: add list_tempoary_files function
+  * Add DnstableManager.clean_tempfiles function
+  * dnstable-manager: add clean_tempfiles option, plumbing
+
+ -- Henry Stern <stern@fsi.io>  Thu, 05 May 2016 15:16:11 -0300
+
 dnstable-manager (0.8.0) debian-farsightsec; urgency=medium
 
   * Implement download timeouts
