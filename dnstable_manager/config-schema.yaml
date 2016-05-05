@@ -58,6 +58,8 @@ properties:
                                         - WARNING
                                         - INFO
                                         - DEBUG
+                        clean_tempfiles:
+                                type: boolean
                 required:
                         - log_level
         downloader:

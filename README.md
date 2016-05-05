@@ -61,6 +61,7 @@ sections:
         syslog: 'true' or 'false'
 	syslog_facility: uppercase_name_of_facility
         log_level: one of 'CRITICAL', 'ERROR', 'WARNING', 'INFO', 'DEBUG'
+        clean_tempfiles: 'true' or 'false', cleans up stale temporary files at start
     downloader:
         max_downloads: integer, at least 3 recommended
         download_timeout: time in seconds
