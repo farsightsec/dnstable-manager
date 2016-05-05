@@ -1,6 +1,7 @@
 manager:
         log_file: /var/log/dnstable-manager/dnstable-manager.log
         log_level: ERROR
+        clean_tempfiles: True
 downloader:
         max_downloads: 4
         retry_timeout: 60

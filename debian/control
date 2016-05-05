@@ -9,6 +9,7 @@ Build-Depends: python, python-setuptools (>= 0.6b3), debhelper (>= 9),
  python-jsonschema (>= 2.3.0),
  python-option-merge,
  python-pkg-resources,
+ python-psutil,
  python-terminable-thread,
  python-yaml
 Standards-Version: 3.9.5
@@ -24,6 +25,7 @@ Depends: ${misc:Depends}, ${python:Depends}, ${shlibs:Depends},
  python-jsonschema (>= 2.3.0),
  python-option-merge,
  python-pkg-resources,
+ python-psutil,
  python-terminable-thread,
  python-yaml,
 Description: Farsight DNSTable Manager

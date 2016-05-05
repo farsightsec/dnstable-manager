@@ -129,6 +129,8 @@ def main():
                 download_timeout=config['downloader'].get('download_timeout', None),
                 download_manager = download_manager)
         fileset_managers[fileset] = manager
+        if config['manager'].get('clean_tempfiles'):
+            manager.clean_tempfiles()
         manager.start()
 
     download_manager.start()

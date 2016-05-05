@@ -30,6 +30,7 @@ from dnstable_manager.fileset import Fileset, FilesetError
 import jsonschema
 import option_merge
 import pkg_resources
+import psutil
 import yaml
 
 logger = logging.getLogger(__name__)
@@ -159,3 +160,19 @@ class DNSTableManager:
 
             time.sleep(1)
 
+    def clean_tempfiles(self):
+        open_files = set()
+        for p in psutil.process_iter():
+            try:
+                for f in p.get_open_files():
+                    open_files.add(f.path)
+            except psutil.AccessDenied:
+                pass
+
+        for filename in self.fileset.list_temporary_files():
+            if filename in open_files:
+                logger.debug('Not unlinking tempfile {!r}: In use.'.format(filename))
+                continue
+
+            logger.debug('Unlinking tempfile: {!r}'.format(filename))
+            os.unlink(filename)

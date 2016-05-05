@@ -40,10 +40,12 @@ class TestDNSTableManager(unittest.TestCase):
     def setUp(self):
         self.orig_urlopen = urllib2.urlopen
         self.orig_sleep = time.sleep
+        self.td = tempfile.mkdtemp(prefix='test-dnstable-manager.')
 
     def tearDown(self):
         urllib2.urlopen = self.orig_urlopen
         time.sleep = self.orig_sleep
+        shutil.rmtree(self.td, ignore_errors=True)
 
     def test_run(self):
         uri_base = 'http://example.com'
@@ -78,15 +80,24 @@ class TestDNSTableManager(unittest.TestCase):
             raise Success
         time.sleep = my_sleep
 
-        td = tempfile.mkdtemp(prefix='test-dnstable-manager-run.')
-        try:
-            d = DownloadManager()
-            d.start()
-            m = DNSTableManager(fileset_uri, td, download_manager=d)
-            self.assertRaises(Success, m.run)
-            self.orig_sleep(0.1)
-            for fn in fileset:
-                self.assertEqual(open(os.path.join(td, fn)).read(), fn)
-            d.stop(blocking=True)
-        finally:
-            shutil.rmtree(td, ignore_errors=True)
+        d = DownloadManager()
+        d.start()
+        m = DNSTableManager(fileset_uri, self.td, download_manager=d)
+        self.assertRaises(Success, m.run)
+        self.orig_sleep(0.1)
+        for fn in fileset:
+            self.assertEqual(open(os.path.join(self.td, fn)).read(), fn)
+        d.stop(blocking=True)
+
+    def test_clean_tempfiles(self):
+        m = DNSTableManager(os.path.join('file://', self.td), self.td, base='dns', download_manager=None)
+        closed_file = os.path.join(self.td, '.dns.2000.Y.mtbl.XXXXXX')
+        opened_file = os.path.join(self.td, '.dns.2001.Y.mtbl.XXXXXX')
+        open(closed_file, 'w')
+        of = open(opened_file, 'w')
+
+        m.clean_tempfiles()
+        of.close()
+
+        self.assertTrue(os.path.exists(opened_file))
+        self.assertFalse(os.path.exists(closed_file))

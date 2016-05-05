@@ -10,6 +10,7 @@ setup(
         'functools32',
         'jsonschema (>=2.3.0)',
         'option_merge',
+        'psutil',
         'PyYAML',
         'setuptools',
         'terminable_thread',
