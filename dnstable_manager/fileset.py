@@ -390,3 +390,6 @@ class Fileset(object):
 
     def missing_files(self):
         return self.remote_files.difference(self.all_local_files)
+
+    def list_temporary_files(self):
+        return glob.glob(os.path.join(self.dname, '.{}.*.{}.*'.format(self.base, self.extension)))

@@ -447,3 +447,21 @@ class TestFileset(unittest.TestCase):
         fs.remote_files = files.union(missing)
 
         self.assertItemsEqual(fs.missing_files(), missing)
+
+    def test_list_tempfiles(self):
+        fs = Fileset(None, self.td)
+        files = set((
+            'dns.2014.Y.mtbl',
+            'dns.201501.M.mtbl',
+            'dns.20150201.W.mtbl',
+            'dns.20150208.D.mtbl',
+            'dns.20150209.0000.H.mtbl',
+            'dns.20150209.0100.X.mtbl',
+            'dns.20150209.0110.m.mtbl'
+            ))
+        for fn in files:
+            open(os.path.join(self.td, fn), 'w')
+            open(os.path.join(self.td, '.{}'.format(fn)), 'w')
+
+        tempfiles = set(tempfile.mkstemp(dir=self.td, prefix='.{}.'.format(fn))[1] for fn in files)
+        self.assertItemsEqual(fs.list_temporary_files(), tempfiles)
