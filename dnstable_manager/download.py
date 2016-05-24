@@ -130,6 +130,8 @@ class DownloadManager:
             if 'Digest' in fp.headers:
                 algorithm,_,digest = fp.headers['Digest'].partition('=')
                 digest_file = '{}.{}'.format(target, digest_extension(algorithm))
+            elif f.digest_required:
+                raise DownloadError('Digest header missing and digest_required=True')
 
             logger.debug('Copying urlopen of {} to {}'.format(f.uri, out.name))
             for chunk in check_digest(iterfileobj(fp), algorithm, digest):

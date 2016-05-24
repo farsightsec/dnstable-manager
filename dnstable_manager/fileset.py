@@ -189,13 +189,14 @@ class File(object):
 
     _valid_tl = ('Y', 'Q', 'M', 'W', 'D', 'H', 'X', 'm')
 
-    def __init__(self, name, dname=None, uri=None, validator=None):
+    def __init__(self, name, dname=None, uri=None, validator=None, digest_required=True):
         self.name = name
         self.dname = dname
         self.uri = uri
         self.validator = validator
         self._init_tl()
         self._init_datetime()
+        self.digest_required = digest_required
 
     def __repr__(self):
         return '<File %r, tl %r, %r, dir %r, uri %r>' % (self.name, self.tl, self.datetime, self.dname, self.uri)
@@ -254,7 +255,7 @@ class File(object):
                 raise ValidationFailed('Validation of {} failed: {}'.format(filename, stderr.read()))
 
 class Fileset(object):
-    def __init__(self, uri, dname, base='dns', extension='mtbl', validator=None, timeout=None):
+    def __init__(self, uri, dname, base='dns', extension='mtbl', validator=None, digest_required=True, timeout=None):
         """
         Create a new Fileset object.
 
@@ -274,6 +275,7 @@ class Fileset(object):
         self.base = base
         self.extension = extension
         self.validator = validator
+        self.digest_required = digest_required
         self.timeout = timeout
 
         self.all_local_files = None
@@ -287,7 +289,7 @@ class Fileset(object):
         new_local_files = set()
         for fname in glob.glob(g_expr):
             try:
-                new_local_files.add(File(os.path.basename(fname), validator=self.validator))
+                new_local_files.add(File(os.path.basename(fname), validator=self.validator, digest_required=self.digest_required))
             except ParseError as e:
                 logger.debug('Error parsing filename \'{}\': {}'.format(fname, str(e)))
         self.all_local_files = set(new_local_files)
@@ -393,7 +395,7 @@ class Fileset(object):
                     logger.warning('Skipping {}.  Extensions is not {}.'.format(fname, self.extension))
                     continue
 
-                new_remote_files.add(File(fname, dname=self.dname, uri=relative_uri(self.uri, fname), validator=self.validator))
+                new_remote_files.add(File(fname, dname=self.dname, uri=relative_uri(self.uri, fname), validator=self.validator, digest_required=self.digest_required))
         except DigestError as e:
             raise FilesetError(e)
 

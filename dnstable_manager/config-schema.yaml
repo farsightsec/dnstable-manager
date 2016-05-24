@@ -125,6 +125,8 @@ properties:
                                                 exclusiveMinimum: true
                                         validator:
                                                 type: string
+                                        digest_required:
+                                                type: boolean
                                         minimal:
                                                 type: boolean
                                 required:

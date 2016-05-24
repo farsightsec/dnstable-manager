@@ -83,5 +83,6 @@ sections:
 	    extension: REQUIRED, suffix of files in set (e.g. mtbl)
             frequency: REQUIRED, how often to download the fileset
             validator: validation command (filename is passed as argv[1])
+            digest_required: require Digest header validation, set to false to disable
             minimal: optional boolean to enable base-full.fileset
 ```

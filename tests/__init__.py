@@ -82,7 +82,7 @@ class TestDNSTableManager(unittest.TestCase):
 
         d = DownloadManager()
         d.start()
-        m = DNSTableManager(fileset_uri, self.td, download_manager=d)
+        m = DNSTableManager(fileset_uri, self.td, download_manager=d, digest_required=False)
         self.assertRaises(Success, m.run)
         self.orig_sleep(0.1)
         for fn in fileset:
