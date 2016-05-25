@@ -78,6 +78,7 @@ sections:
             realm: optional HTTP authentication realm
             username: HTTP authentication username
 	    password: HTTP authentication password
+	    apikey: X-API-Key secret
             destination: REQUIRED, local destination dir of fileset
 	    base: REQUIRED, prefix of fileset name (e.g. dns, dnssec, dns--com)
 	    extension: REQUIRED, suffix of files in set (e.g. mtbl)

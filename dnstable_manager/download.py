@@ -121,7 +121,10 @@ class DownloadManager:
 
             logger.info('Downloading {} to {}'.format(f.uri, target))
 
-            fp = urllib2.urlopen(f.uri, timeout=self._download_timeout)
+            req = urllib2.Request(f.uri)
+            if f.apikey:
+                req.add_header('X-API-Key', f.apikey)
+            fp = urllib2.urlopen(req, timeout=self._download_timeout)
             out = tempfile.NamedTemporaryFile(prefix='.{}.'.format(f.name), dir=f.dname, delete=True)
 
             algorithm = None

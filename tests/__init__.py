@@ -28,6 +28,11 @@ from dnstable_manager import get_config, DNSTableManager
 from dnstable_manager.download import DownloadManager
 import jsonschema
 
+def get_uri(obj):
+    if isinstance(obj, urllib2.Request):
+        return obj.get_full_url()
+    return obj
+
 class TestGetConfig(unittest.TestCase):
     def test_get_config_default(self):
         with self.assertRaises(jsonschema.ValidationError):
@@ -60,8 +65,11 @@ class TestDNSTableManager(unittest.TestCase):
             'dns.20150209.0110.m.mtbl'
             )
 
-        def my_urlopen(uri, timeout=None):
+        def my_urlopen(obj, timeout=None):
+            uri = get_uri(obj)
+
             msg = httplib.HTTPMessage(StringIO())
+
             if uri == fileset_uri:
                 return urllib.addinfourl(StringIO('\n'.join(fileset + ('',))),
                         msg, uri)

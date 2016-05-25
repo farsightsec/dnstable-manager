@@ -189,10 +189,11 @@ class File(object):
 
     _valid_tl = ('Y', 'Q', 'M', 'W', 'D', 'H', 'X', 'm')
 
-    def __init__(self, name, dname=None, uri=None, validator=None, digest_required=True):
+    def __init__(self, name, dname=None, uri=None, apikey=None, validator=None, digest_required=True):
         self.name = name
         self.dname = dname
         self.uri = uri
+        self.apikey = apikey
         self.validator = validator
         self._init_tl()
         self._init_datetime()
@@ -255,7 +256,7 @@ class File(object):
                 raise ValidationFailed('Validation of {} failed: {}'.format(filename, stderr.read()))
 
 class Fileset(object):
-    def __init__(self, uri, dname, base='dns', extension='mtbl', validator=None, digest_required=True, timeout=None):
+    def __init__(self, uri, dname, base='dns', extension='mtbl', apikey=None, validator=None, digest_required=True, timeout=None):
         """
         Create a new Fileset object.
 
@@ -274,6 +275,7 @@ class Fileset(object):
         self.dname = dname
         self.base = base
         self.extension = extension
+        self.apikey = apikey
         self.validator = validator
         self.digest_required = digest_required
         self.timeout = timeout
@@ -371,7 +373,10 @@ class Fileset(object):
 
     def load_remote_fileset(self):
         logger.info('Retrieving {}'.format(self.uri))
-        fp = urllib2.urlopen(self.uri, timeout=self.timeout)
+        req = urllib2.Request(self.uri)
+        if self.apikey:
+            req.add_header('X-API-Key', self.apikey)
+        fp = urllib2.urlopen(req, timeout=self.timeout)
         new_remote_files = set()
         read_len = 0
         algorithm = None

@@ -111,6 +111,8 @@ properties:
                                                 type: string
                                         password:
                                                 type: string
+                                        apikey:
+                                                type: string
                                         destination:
                                                 type: string
                                         base:
