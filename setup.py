@@ -6,9 +6,9 @@ setup(
     packages = find_packages(),
 
     scripts = ['dnstable-manager'],
-    requires = [
+    install_requires = [
         'functools32',
-        'jsonschema (>=2.3.0)',
+        'jsonschema >=2.3.0',
         'option_merge',
         'psutil',
         'PyYAML',
