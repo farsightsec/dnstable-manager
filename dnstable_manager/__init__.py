@@ -164,7 +164,12 @@ class DNSTableManager:
         open_files = set()
         for p in psutil.process_iter():
             try:
-                for f in p.get_open_files():
+                try:
+                    func = p.get_open_files
+                except AttributeError:
+                    func = p.open_files
+
+                for f in func():
                     open_files.add(f.path)
             except psutil.AccessDenied:
                 pass
