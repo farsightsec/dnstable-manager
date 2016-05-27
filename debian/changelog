@@ -1,3 +1,10 @@
+dnstable-manager (0.9.1) debian-farsightsec; urgency=medium
+
+  * setup: change requires to install_requires
+  * dnstable_manager: psutils compatibility between 1.2.0 and 4.2.0
+
+ -- Henry Stern <stern@fsi.io>  Fri, 27 May 2016 16:55:36 -0300
+
 dnstable-manager (0.9.0) debian-farsightsec; urgency=medium
 
   * README: add missing docs for download_timeout
