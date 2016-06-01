@@ -13,8 +13,11 @@
 # limitations under the License.
 
 from __future__ import print_function
+
+import base64
 from cStringIO import StringIO
 import datetime
+import hashlib
 import httplib
 import os
 import shutil
@@ -23,7 +26,9 @@ import unittest
 import urllib
 import urllib2
 
-from dnstable_manager.fileset import File, Fileset, ParseError, compute_overlap, parse_datetime, relative_uri
+from . import get_uri
+from dnstable_manager.digest import DIGEST_EXTENSIONS
+from dnstable_manager.fileset import File, Fileset, FilesetError, ParseError, compute_overlap, parse_datetime, relative_uri
 
 class TestParseDatetime(unittest.TestCase):
     def test_parse_datetime_minute(self):
@@ -386,6 +391,12 @@ class TestFileset(unittest.TestCase):
 
         class Fail(Exception): pass
         to_delete = set(os.path.join(self.td, fn.name) for fn in files)
+
+        for fn in set(to_delete):
+            for extension in DIGEST_EXTENSIONS:
+                to_delete.add('{}.{}'.format(os.path.splitext(fn)[0],
+                    extension))
+
         def my_unlink(fn):
             self.assertIn(fn, to_delete)
             to_delete.remove(fn)
@@ -410,10 +421,12 @@ class TestFileset(unittest.TestCase):
             'dns.20150209.0110.m.mtbl'
             )
 
-        def my_urlopen(uri, timeout=None):
+        def my_urlopen(obj, timeout=None):
+            uri = get_uri(obj)
             self.assertEqual(uri, fileset_uri)
             fp = StringIO('\n'.join(files + ('',)))
-            msg = httplib.HTTPMessage(fp=StringIO('Content-Length: {}'.format(len(fp.getvalue()))), seekable=True)
+            digest = base64.b64encode(hashlib.sha256(fp.getvalue()).digest())
+            msg = httplib.HTTPMessage(fp=StringIO('Content-Length: {}\r\nDigest: SHA-256={}'.format(len(fp.getvalue()), digest)), seekable=True)
             return urllib.addinfourl(fp, msg, uri)
         urllib2.urlopen = my_urlopen
 
@@ -421,6 +434,92 @@ class TestFileset(unittest.TestCase):
         fs.load_remote_fileset()
 
         self.assertItemsEqual(fs.remote_files, (File(f) for f in files))
+
+    def test_load_remote_fileset_apikey(self):
+        fileset_uri = 'http://example.com/dns.fileset'
+        files = (
+            'dns.2014.Y.mtbl',
+            'dns.201501.M.mtbl',
+            'dns.20150201.W.mtbl',
+            'dns.20150208.D.mtbl',
+            'dns.20150209.0000.H.mtbl',
+            'dns.20150209.0100.X.mtbl',
+            'dns.20150209.0110.m.mtbl'
+            )
+        apikey = 'TEST APIKEY'
+
+        headers = []
+
+        def my_urlopen(obj, timeout=None):
+            headers.extend(obj.header_items())
+            uri = get_uri(obj)
+            self.assertEqual(uri, fileset_uri)
+            fp = StringIO('\n'.join(files + ('',)))
+            digest = base64.b64encode(hashlib.sha256(fp.getvalue()).digest())
+            msg = httplib.HTTPMessage(fp=StringIO('Content-Length: {}\r\nDigest: SHA-256={}'.format(len(fp.getvalue()), digest)), seekable=True)
+            return urllib.addinfourl(fp, msg, uri)
+        urllib2.urlopen = my_urlopen
+
+        fs = Fileset(fileset_uri, self.td, apikey=apikey)
+        self.assertEqual(fs.apikey, apikey)
+        fs.load_remote_fileset()
+
+        for k,v in headers:
+            if k.lower() == 'x-api-key':
+                self.assertEqual(v, apikey)
+                break
+        else:
+            self.fail('X-API-Key header missing')
+
+        self.assertItemsEqual(fs.remote_files, (File(f) for f in files))
+
+    def test_load_remote_fileset_bad_content_length(self):
+        fileset_uri = 'http://example.com/dns.fileset'
+        files = (
+            'dns.2014.Y.mtbl',
+            'dns.201501.M.mtbl',
+            'dns.20150201.W.mtbl',
+            'dns.20150208.D.mtbl',
+            'dns.20150209.0000.H.mtbl',
+            'dns.20150209.0100.X.mtbl',
+            'dns.20150209.0110.m.mtbl'
+            )
+
+        def my_urlopen(obj, timeout=None):
+            uri = get_uri(obj)
+            self.assertEqual(uri, fileset_uri)
+            fp = StringIO('\n'.join(files + ('',)))
+            msg = httplib.HTTPMessage(fp=StringIO('Content-Length: {}'.format(len(fp.getvalue())+1)), seekable=True)
+            return urllib.addinfourl(fp, msg, uri)
+        urllib2.urlopen = my_urlopen
+
+        fs = Fileset(fileset_uri, self.td)
+        with self.assertRaisesRegexp(FilesetError, r'content length mismatch'):
+            fs.load_remote_fileset()
+
+    def test_load_remote_fileset_bad_digest(self):
+        fileset_uri = 'http://example.com/dns.fileset'
+        files = (
+            'dns.2014.Y.mtbl',
+            'dns.201501.M.mtbl',
+            'dns.20150201.W.mtbl',
+            'dns.20150208.D.mtbl',
+            'dns.20150209.0000.H.mtbl',
+            'dns.20150209.0100.X.mtbl',
+            'dns.20150209.0110.m.mtbl'
+            )
+
+        def my_urlopen(obj, timeout=None):
+            uri = get_uri(obj)
+            self.assertEqual(uri, fileset_uri)
+            fp = StringIO('\n'.join(files + ('',)))
+            msg = httplib.HTTPMessage(fp=StringIO('Content-Length: {}\r\nDigest: SHA-256=INVALID'.format(len(fp.getvalue()))), seekable=True)
+            return urllib.addinfourl(fp, msg, uri)
+        urllib2.urlopen = my_urlopen
+
+        fs = Fileset(fileset_uri, self.td)
+        with self.assertRaisesRegexp(FilesetError, r'Digest mismatch'):
+            fs.load_remote_fileset()
 
     def test_missing_files(self):
         files = set(File(f) for f in (

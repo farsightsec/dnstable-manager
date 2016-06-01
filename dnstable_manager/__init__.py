@@ -73,7 +73,7 @@ def get_config(filename=None, stream=None, validate=True):
     return config
 
 class DNSTableManager:
-    def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, download_timeout=None, retry_timeout=60, validator=None, minimal=True, download_manager=None):
+    def __init__(self, fileset_uri, destination, base=None, extension='mtbl', frequency=1800, download_timeout=None, retry_timeout=60, apikey=None, validator=None, digest_required=True, minimal=True, download_manager=None):
         self.fileset_uri = fileset_uri
 
         if not os.path.isdir(destination):
@@ -96,8 +96,10 @@ class DNSTableManager:
                 dname=self.destination,
                 base=self.base,
                 extension=self.extension,
+                apikey=apikey,
                 validator=validator,
-                timeout=download_timeout)
+                timeout=download_timeout,
+                digest_required=digest_required)
 
         if download_manager:
             self.download_manager = download_manager

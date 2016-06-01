@@ -17,13 +17,14 @@ from __future__ import print_function
 import heapq
 import logging
 import os
-import shutil
 import tempfile
 import time
 import threading
 import traceback
 import urllib2
 
+from .digest import check_digest, digest_extension
+from .util import iterfileobj
 import terminable_thread
 
 logger = logging.getLogger(__name__)
@@ -120,11 +121,24 @@ class DownloadManager:
 
             logger.info('Downloading {} to {}'.format(f.uri, target))
 
-            fp = urllib2.urlopen(f.uri, timeout=self._download_timeout)
+            req = urllib2.Request(f.uri)
+            if f.apikey:
+                req.add_header('X-API-Key', f.apikey)
+            fp = urllib2.urlopen(req, timeout=self._download_timeout)
             out = tempfile.NamedTemporaryFile(prefix='.{}.'.format(f.name), dir=f.dname, delete=True)
 
+            algorithm = None
+            digest = None
+            digest_file = None
+            if 'Digest' in fp.headers:
+                algorithm,_,digest = fp.headers['Digest'].partition('=')
+                digest_file = '{}.{}'.format(target, digest_extension(algorithm))
+            elif f.digest_required:
+                raise DownloadError('Digest header missing and digest_required=True')
+
             logger.debug('Copying urlopen of {} to {}'.format(f.uri, out.name))
-            shutil.copyfileobj(fp, out)
+            for chunk in check_digest(iterfileobj(fp), algorithm, digest):
+                out.write(chunk)
 
             if 'Content-Length' in fp.headers:
                 try:
@@ -147,9 +161,25 @@ class DownloadManager:
 
             f.validate(out.name)
 
-            logger.debug('Renaming {} to {}'.format(out.name, target))
-            os.rename(out.name, target)
-            out.delete = False
+            if digest_file:
+                logger.debug('Writing digest={} to {}'.format(digest, digest_file))
+                tmp_digest_file = tempfile.NamedTemporaryFile(prefix='.{}.'.format(os.path.basename(digest_file)), dir=f.dname, delete=True)
+                print ('{}  {}'.format(digest.decode('base64').encode('hex'), os.path.basename(target)), file=tmp_digest_file)
+                tmp_digest_file.file.close()
+                os.chmod(tmp_digest_file.name, 0o644)
+                os.rename(tmp_digest_file.name, digest_file)
+                tmp_digest_file.delete = False
+
+            try:
+                logger.debug('Renaming {} to {}'.format(out.name, target))
+                os.rename(out.name, target)
+                out.delete = False
+            except:
+                try:
+                    os.unlink(digest_file)
+                except OSError:
+                    pass
+                raise
 
             logger.info('Download of {} to {} complete'.format(f.uri, target))
         except (KeyboardInterrupt, SystemExit) as e:

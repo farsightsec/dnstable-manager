@@ -111,6 +111,8 @@ properties:
                                                 type: string
                                         password:
                                                 type: string
+                                        apikey:
+                                                type: string
                                         destination:
                                                 type: string
                                         base:
@@ -125,6 +127,8 @@ properties:
                                                 exclusiveMinimum: true
                                         validator:
                                                 type: string
+                                        digest_required:
+                                                type: boolean
                                         minimal:
                                                 type: boolean
                                 required:

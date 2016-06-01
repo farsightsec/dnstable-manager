@@ -25,6 +25,8 @@ import time
 import urllib
 import urllib2
 
+from .digest import DigestError, check_digest, DIGEST_EXTENSIONS
+
 logger = logging.getLogger(__name__)
 disable_unlink = False
 
@@ -187,13 +189,15 @@ class File(object):
 
     _valid_tl = ('Y', 'Q', 'M', 'W', 'D', 'H', 'X', 'm')
 
-    def __init__(self, name, dname=None, uri=None, validator=None):
+    def __init__(self, name, dname=None, uri=None, apikey=None, validator=None, digest_required=True):
         self.name = name
         self.dname = dname
         self.uri = uri
+        self.apikey = apikey
         self.validator = validator
         self._init_tl()
         self._init_datetime()
+        self.digest_required = digest_required
 
     def __repr__(self):
         return '<File %r, tl %r, %r, dir %r, uri %r>' % (self.name, self.tl, self.datetime, self.dname, self.uri)
@@ -252,7 +256,7 @@ class File(object):
                 raise ValidationFailed('Validation of {} failed: {}'.format(filename, stderr.read()))
 
 class Fileset(object):
-    def __init__(self, uri, dname, base='dns', extension='mtbl', validator=None, timeout=None):
+    def __init__(self, uri, dname, base='dns', extension='mtbl', apikey=None, validator=None, digest_required=True, timeout=None):
         """
         Create a new Fileset object.
 
@@ -271,7 +275,9 @@ class Fileset(object):
         self.dname = dname
         self.base = base
         self.extension = extension
+        self.apikey = apikey
         self.validator = validator
+        self.digest_required = digest_required
         self.timeout = timeout
 
         self.all_local_files = None
@@ -285,7 +291,7 @@ class Fileset(object):
         new_local_files = set()
         for fname in glob.glob(g_expr):
             try:
-                new_local_files.add(File(os.path.basename(fname), validator=self.validator))
+                new_local_files.add(File(os.path.basename(fname), validator=self.validator, digest_required=self.digest_required))
             except ParseError as e:
                 logger.debug('Error parsing filename \'{}\': {}'.format(fname, str(e)))
         self.all_local_files = set(new_local_files)
@@ -349,6 +355,15 @@ class Fileset(object):
             try:
                 if not disable_unlink:
                     os.unlink(fn)
+                    for extension in DIGEST_EXTENSIONS:
+                        digest_fn = '{}.{}'.format(os.path.splitext(fn)[0],
+                                extension)
+                        try:
+                            os.unlink(digest_fn)
+                            logger.info('Unlinked digest file {}'.format(digest_fn))
+                        except OSError as e:
+                            if e.errno != errno.ENOENT:
+                                logger.error('Could not unlink digest file {}: {}'.format(digest_fn, e))
             except OSError as e:
                 if e.errno == errno.ENOENT:
                     logger.error('File vanished {}'.format(fn))
@@ -358,24 +373,36 @@ class Fileset(object):
 
     def load_remote_fileset(self):
         logger.info('Retrieving {}'.format(self.uri))
-        fp = urllib2.urlopen(self.uri, timeout=self.timeout)
+        req = urllib2.Request(self.uri)
+        if self.apikey:
+            req.add_header('X-API-Key', self.apikey)
+        fp = urllib2.urlopen(req, timeout=self.timeout)
         new_remote_files = set()
         read_len = 0
-        for fname in fp:
-            read_len += len(fname)
-            fname = fname.rstrip()
+        algorithm = None
+        digest = None
 
-            if os.path.basename(fname) != fname:
-                logger.warning('Skipping {}.  Not a basename.'.format(fname))
-                continue
-            if not fname.startswith('{}.'.format(self.base)):
-                logger.warning('Skipping {}.  Base is not {}.'.format(fname, self.base))
-                continue
-            if not fname.endswith('.{}'.format(self.extension)):
-                logger.warning('Skipping {}.  Extensions is not {}.'.format(fname, self.extension))
-                continue
+        if 'Digest' in fp.headers:
+            algorithm,_,digest = fp.headers['Digest'].partition('=')
 
-            new_remote_files.add(File(fname, dname=self.dname, uri=relative_uri(self.uri, fname), validator=self.validator))
+        try:
+            for fname in check_digest(fp, algorithm, digest):
+                read_len += len(fname)
+                fname = fname.rstrip()
+
+                if os.path.basename(fname) != fname:
+                    logger.warning('Skipping {}.  Not a basename.'.format(fname))
+                    continue
+                if not fname.startswith('{}.'.format(self.base)):
+                    logger.warning('Skipping {}.  Base is not {}.'.format(fname, self.base))
+                    continue
+                if not fname.endswith('.{}'.format(self.extension)):
+                    logger.warning('Skipping {}.  Extensions is not {}.'.format(fname, self.extension))
+                    continue
+
+                new_remote_files.add(File(fname, dname=self.dname, uri=relative_uri(self.uri, fname), validator=self.validator, digest_required=self.digest_required))
+        except DigestError as e:
+            raise FilesetError(e)
 
         if 'Content-Length' in fp.headers:
             try:
