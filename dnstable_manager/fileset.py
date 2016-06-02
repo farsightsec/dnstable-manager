@@ -291,7 +291,7 @@ class Fileset(object):
         new_local_files = set()
         for fname in glob.glob(g_expr):
             try:
-                new_local_files.add(File(os.path.basename(fname), validator=self.validator, digest_required=self.digest_required))
+                new_local_files.add(File(os.path.basename(fname), validator=self.validator, apikey=self.apikey, digest_required=self.digest_required))
             except ParseError as e:
                 logger.debug('Error parsing filename \'{}\': {}'.format(fname, str(e)))
         self.all_local_files = set(new_local_files)
@@ -400,7 +400,7 @@ class Fileset(object):
                     logger.warning('Skipping {}.  Extensions is not {}.'.format(fname, self.extension))
                     continue
 
-                new_remote_files.add(File(fname, dname=self.dname, uri=relative_uri(self.uri, fname), validator=self.validator, digest_required=self.digest_required))
+                new_remote_files.add(File(fname, dname=self.dname, uri=relative_uri(self.uri, fname), validator=self.validator, apikey=self.apikey, digest_required=self.digest_required))
         except DigestError as e:
             raise FilesetError(e)
 
