@@ -126,6 +126,7 @@ def main():
                 frequency=fileset_config['frequency'],
                 apikey=fileset_config.get('apikey', None),
                 validator=fileset_config.get('validator', None),
+                digest_required=fileset_config.get('digest_required', True),
                 minimal=fileset_config.get('minimal', True),
                 download_timeout=config['downloader'].get('download_timeout', None),
                 download_manager = download_manager)
