@@ -1,3 +1,14 @@
+dnstable-manager (1.0.0) debian-farsightsec; urgency=medium
+
+  * download,fileset: Add support for Digest header validation, caching
+  * Add digest_required option to fileset to make Digest verification mandatory.
+  * Add apikey support
+  * dnstable-manager, fileset: add missing apikey glue
+  * dnstable-manager: add missing digest_required config variable reference
+  * dnstable-manager: temporarily make digest_required default to False
+
+ -- Henry Stern <stern@fsi.io>  Mon, 11 Jul 2016 09:04:09 -0300
+
 dnstable-manager (0.9.1) debian-farsightsec; urgency=medium
 
   * setup: change requires to install_requires
