@@ -394,8 +394,7 @@ class TestFileset(unittest.TestCase):
 
         for fn in set(to_delete):
             for extension in DIGEST_EXTENSIONS:
-                to_delete.add('{}.{}'.format(os.path.splitext(fn)[0],
-                    extension))
+                to_delete.add('{}.{}'.format(fn, extension))
 
         def my_unlink(fn):
             self.assertIn(fn, to_delete)

@@ -356,8 +356,7 @@ class Fileset(object):
                 if not disable_unlink:
                     os.unlink(fn)
                     for extension in DIGEST_EXTENSIONS:
-                        digest_fn = '{}.{}'.format(os.path.splitext(fn)[0],
-                                extension)
+                        digest_fn = '{}.{}'.format(fn, extension)
                         try:
                             os.unlink(digest_fn)
                             logger.info('Unlinked digest file {}'.format(digest_fn))

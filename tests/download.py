@@ -133,7 +133,7 @@ class TestDownloadManager(unittest.TestCase):
     def test_download_bad_digest(self):
         tf = tempfile.NamedTemporaryFile(prefix='dns-test-dnstable-manager_download-', suffix='.2015.Y.mtbl', delete=True)
         test_data = 'abc\n123\n'
-        digest_file = os.path.splitext(tf.name)[0] + '.sha256'
+        digest_file = tf.name + '.sha256'
         digest = 'INVALID'
         f = File(os.path.basename(tf.name), dname=os.path.dirname(tf.name))
         f.uri = 'http://example.com/{}'.format(f.name)
