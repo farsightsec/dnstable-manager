@@ -1,3 +1,9 @@
+dnstable-manager (1.0.1) debian-farsightsec; urgency=medium
+
+  * fileset: unlink was stripping extension from digest files
+
+ -- Henry Stern <stern@fsi.io>  Wed, 13 Jul 2016 09:46:35 -0300
+
 dnstable-manager (1.0.0) debian-farsightsec; urgency=medium
 
   * download,fileset: Add support for Digest header validation, caching
