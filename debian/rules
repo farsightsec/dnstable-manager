@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 %:
-	dh $@ --with python2
+	dh $@ --with python2 --with systemd
 
 override_dh_auto_install:
 	python setup.py install --root=debian/dnstable-manager --install-layout=deb --install-lib=/usr/share/dnstable-manager --install-scripts=/usr/share/dnstable-manager

@@ -1,15 +1,16 @@
 [Unit]
 Description=Farsight DNSTable Manager Service
 ConditionPathExists=/usr/bin/dnstable-manager
-ConditionPathExists=/etc/dnstable-manager/dnstable-manager.yaml
+
+[Install]
+Alias=dnstable-manager.service
 
 [Service]
 EnvironmentFile=/etc/default/dnstable-manager
 ExecStart=/usr/bin/dnstable-manager --config $CONFIG_FILE
 Restart=always
 RestartSec=1
-
-[Exec]
-EnvironmentFile=/etc/default/dnstable-manager
-User=$USER
-Group=$GROUP
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=full
+NoNewPrivileges=yes

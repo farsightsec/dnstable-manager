@@ -9,4 +9,5 @@ debian/*.debhelper
 debian/*.substvars
 debian/dnstable-manager/
 debian/dnstable-manager-run/
+debian/dnstable-manager-service/
 debian/files

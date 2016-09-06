@@ -39,7 +39,15 @@ Package: dnstable-manager-run
 Section: utils
 Architecture: any
 Depends: dnstable-manager (= ${binary:Version}), runit
-Conflicts: systemd
+Conflicts: dnstable-manager-service
 Description: Runit scripts for Farsight DNSTable Manager
  In case your system does not have systemd installed you can use this to run
  Farsight DNSTable Manager with runit.
+
+Package: dnstable-manager-service
+Section: utils
+Architecture: any
+Depends: dnstable-manager (= ${binary:Version}), systemd
+Conflicts: dnstable-manager-run
+Description: Systemd service for Farsight DNSTable Manager
+ You can use this to run Farsight DNSTable Manager with systemd.
