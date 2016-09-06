@@ -1,3 +1,9 @@
+dnstable-manager (1.0.2) debian-farsightsec; urgency=medium
+
+  * Refactor systemd service to own package
+
+ -- Henry Stern <stern@fsi.io>  Tue, 06 Sep 2016 18:14:11 -0300
+
 dnstable-manager (1.0.1) debian-farsightsec; urgency=medium
 
   * fileset: unlink was stripping extension from digest files
