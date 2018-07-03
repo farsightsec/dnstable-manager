@@ -24,7 +24,7 @@ try:
     ssl.CertificateError
 except AttributeError:
     logger.debug('Using backported ssl.py')
-    import backports.ssl as ssl
+    import backported.ssl as ssl
 
 ca_file = '/etc/ssl/certs/ca-certificates.crt'
 keyfile = None
