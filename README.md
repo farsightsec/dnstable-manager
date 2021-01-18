@@ -1,6 +1,11 @@
 Farsight DNSTable Manager
 =========================
 
+**NOTE:** This repository is no longer being maintained as of 2020.
+Further updates will be proprietary to Farsight Security, Inc.
+
+=========================
+
 This tool is designed to maintain local copies of DNSTable filesets.
 Given an URL it will periodically download a remote fileset descriptor and
 all files referenced within.  It will maintain a local fileset file that
